@@ -508,6 +508,12 @@ linear-gradient(180deg,#2e7d32,#1f5c27 40%,#123617 100%);border:3px solid rgba(2
 @media (max-width:640px){#jw-menu{padding:8px}#jw-menu .jw-shell{padding:12px 12px 18px;border-radius:22px}#jw-menu .jw-actions{grid-template-columns:1fr;}#jw-menu .jw-status{grid-template-columns:1fr 1fr 1fr;}#jw-menu .jw-videoGrid{grid-template-columns:1fr;}#jw-menu .jw-card{min-height:148px;}}
 </style>
 
+
+<style id="mw-online-css">
+#mw-online-toggle{position:fixed;top:48px;right:8px;z-index:4900;background:#164d2c;color:white;border:2px solid #ffe06c;border-radius:14px;padding:9px 12px;font-weight:900;font-size:13px;box-shadow:0 4px 14px #0008}
+#mw-online-panel{position:fixed;top:90px;right:8px;width:min(340px,calc(100vw - 16px));max-height:72vh;overflow:auto;z-index:4901;background:#123c27;color:#fff;border:2px solid #ffe06c;border-radius:16px;padding:14px;box-shadow:0 10px 28px #000a;display:none;font:13px Arial,sans-serif}
+#mw-online-panel.open{display:block}#mw-online-panel button{background:#ffd65e;color:#3c2800;border:0;border-radius:9px;padding:9px;font-weight:bold;cursor:pointer}#mw-online-panel input{min-width:0;width:100%;border:1px solid #a7d8a7;border-radius:8px;padding:9px;font-size:14px}#mw-online-panel .mw-line{display:flex;gap:6px;margin:8px 0}#mw-online-panel .mw-line input{flex:1}#mw-online-panel .mw-line button{flex:0 0 auto}#mw-online-status{color:#e3f5d2;line-height:1.5;margin:8px 0}#mw-online-log{height:90px;overflow:auto;background:#09261a;padding:7px;border-radius:8px;overflow-wrap:anywhere}#mw-remote-cursor{position:fixed;z-index:800;pointer-events:none;display:none;transform:translate(-50%,-50%);font-size:25px;filter:drop-shadow(0 2px 2px #000)}
+</style>
 </head>
 <body>
 
@@ -6775,5 +6781,41 @@ body.smoothie-open #smoothie-ov{display:flex !important;}
 })();
 </script>
 
+
+<button id="mw-online-toggle" type="button">🌍 Multiplayer</button>
+<div id="mw-online-panel" role="region" aria-label="MonsterWorld Multiplayer">
+<strong>🌿👾 MonsterWorld – Multiplayer (Beta)</strong>
+<p id="mw-online-status">Nicht verbunden</p>
+<div class="mw-line"><button type="button" id="mw-create-room">🏠 Raum erstellen</button><button type="button" id="mw-leave-room">🚪 Verlassen</button></div>
+<div class="mw-line"><input id="mw-room-code" placeholder="Raumcode" autocomplete="off"><button type="button" id="mw-join-room">🔗 Beitreten</button></div>
+<div class="mw-line"><button type="button" id="mw-copy-room">📋 Code kopieren</button></div>
+<div id="mw-online-log" aria-live="polite"></div>
+<div class="mw-line"><input id="mw-chat-text" maxlength="150" placeholder="Nachricht"><button type="button" id="mw-chat-send">Senden</button></div>
+<small>Live: Mitspieler-Marker und Chat. Pflanzen, Coins und Inventar sind noch nicht synchronisiert. Internet erforderlich.</small>
+</div>
+<div id="mw-remote-cursor">👾</div>
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<script id="mw-online-js">
+(()=>{'use strict';
+const $=id=>document.getElementById(id), panel=$('mw-online-panel'), status=$('mw-online-status'), log=$('mw-online-log'), cursor=$('mw-remote-cursor');
+let peer=null, connection=null, roomCode='';
+function say(msg){const d=document.createElement('div');d.textContent=msg;log.appendChild(d);log.scrollTop=log.scrollHeight;}
+function state(msg){status.textContent=msg;}
+function clean(){if(connection){try{connection.close()}catch(e){}}if(peer){try{peer.destroy()}catch(e){}}connection=null;peer=null;roomCode='';cursor.style.display='none';}
+function code(){return 'mw-'+Math.random().toString(36).slice(2,8)+'-'+Math.random().toString(36).slice(2,6);}
+function send(data){if(connection&&connection.open){try{connection.send(data)}catch(e){}}}
+function setup(conn){if(connection&&connection.open){conn.close();return;}connection=conn;conn.on('open',()=>{state('🟢 Verbunden mit Mitspieler');say('🟢 Mitspieler verbunden');send({type:'hello'});});conn.on('data',data=>{if(!data||typeof data!=='object')return;if(data.type==='pos'&&Number.isFinite(data.x)&&Number.isFinite(data.y)){const cv=$('cv');if(!cv)return;const r=cv.getBoundingClientRect();cursor.style.left=(r.left+Math.max(0,Math.min(1,data.x))*r.width)+'px';cursor.style.top=(r.top+Math.max(0,Math.min(1,data.y))*r.height)+'px';cursor.style.display='block';}else if(data.type==='chat'&&typeof data.text==='string'){say('👾 '+data.text.slice(0,150));}else if(data.type==='hello'){say('👋 Hallo aus MonsterWorld!');}});conn.on('close',()=>{state('🔴 Verbindung getrennt');cursor.style.display='none';connection=null;});conn.on('error',e=>state('Verbindungsfehler: '+(e.message||e.type||'unbekannt')));}
+function init(id,onReady){if(typeof Peer==='undefined'){state('PeerJS konnte nicht geladen werden. Internet prüfen.');return;}clean();state('⏳ Verbinde mit Vermittlungsserver…');peer=new Peer(id,{debug:0});peer.on('open',onReady);peer.on('connection',setup);peer.on('error',e=>state('Fehler: '+(e.message||e.type||'Verbindung')));peer.on('disconnected',()=>state('⚠️ Vermittlungsserver getrennt'));}
+$('mw-online-toggle').onclick=()=>panel.classList.toggle('open');
+$('mw-create-room').onclick=()=>{const id=code();init(id,()=>{roomCode=id;$('mw-room-code').value=id;state('🟡 Raum bereit: '+id+' – auf Mitspieler warten');say('Raumcode: '+id);});};
+$('mw-join-room').onclick=()=>{const id=$('mw-room-code').value.trim().toLowerCase();if(!/^mw-[a-z0-9]{6}-[a-z0-9]{4}$/.test(id)){state('Bitte gültigen Raumcode eingeben');return;}init(undefined,()=>{state('⏳ Trete Raum bei…');setup(peer.connect(id,{reliable:true}));});};
+$('mw-leave-room').onclick=()=>{clean();state('Nicht verbunden');say('Raum verlassen');};
+$('mw-copy-room').onclick=async()=>{const val=roomCode||$('mw-room-code').value.trim();if(!val)return;try{await navigator.clipboard.writeText(val);say('📋 Raumcode kopiert');}catch(e){say('Raumcode: '+val);}};
+function chat(){const input=$('mw-chat-text');const t=input.value.trim().slice(0,150);if(!t)return;if(!connection||!connection.open){state('Noch kein Mitspieler verbunden');return;}send({type:'chat',text:t});say('🙂 '+t);input.value='';}
+$('mw-chat-send').onclick=chat;$('mw-chat-text').addEventListener('keydown',e=>{if(e.key==='Enter')chat();});
+let last=0;function move(e){if(!connection||!connection.open)return;const cv=$('cv');if(!cv||e.target!==cv)return;const now=Date.now();if(now-last<65)return;last=now;const r=cv.getBoundingClientRect();send({type:'pos',x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height});}
+document.addEventListener('pointermove',move,{passive:true});document.addEventListener('pointerdown',move,{passive:true});window.addEventListener('beforeunload',clean);
+})();
+</script>
 </body>
 </html>
