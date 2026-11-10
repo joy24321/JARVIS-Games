@@ -1,6 +1,9 @@
-JARVIS Games - Stand 10.11.2026
-Alle HTML-Dateien entpackt in GitHub-Repository Hauptverzeichnis hochladen.
-Speichern/Laden: Buttons unten rechts aufklappen; localStorage bleibt nur auf demselben Browser/Geraet.
-Multiplayer-Testmodus: PeerJS Raum erstellen/beitreten und gegenseitige Cursor sehen. KEIN synchronisiertes Gameplay in JoymWorld, Zoo, Jetpack, Zombie, Frischsaft. Unrailed hat seine eigene bestehende Multiplayer-Logik.
-JoymWorld und Zombie haben in der hochgeladenen ZIP denselben Quellcode.
-PeerJS benoetigt Internet, Verbindung kann durch NAT/Firewall scheitern.
+JARVIS Games – MonsterWorld Update
+
+Alle HTML-Dateien aus dieser ZIP ins Stammverzeichnis des GitHub-Repositories JARVIS-Games hochladen.
+JoymWorld wurde aus dem Menü entfernt; die alte joymworld.html auf GitHub bei Bedarf separat löschen.
+MonsterWorld liegt lokal als monsterworld.html im selben Repository.
+Die vom Nutzer gelieferte HTML-Datei heißt intern JoyWorld und wurde inhaltlich nicht verändert.
+Achtung: Sie referenziert möglicherweise zusätzliche Bilder, Videos und andere Dateien, die nicht mitgeliefert wurden. Diese müssen bei Bedarf separat hochgeladen werden.
+Bestehende Spiel-Speicherfunktionen der anderen Dateien sind unverändert.
+Kein neuer echter synchronisierter Multiplayer für MonsterWorld implementiert.
