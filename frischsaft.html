@@ -301,5 +301,33 @@ function animate(){
   requestAnimationFrame(animate);
 }
 </script>
+
+<style>
+#jv-panel{position:fixed;z-index:2147483600;right:8px;bottom:8px;width:min(285px,calc(100vw - 16px));background:#101c2df2;color:#fff;border:1px solid #49e3a2;border-radius:12px;padding:9px;font:13px Arial,sans-serif;box-shadow:0 4px 22px #0008}
+#jv-panel button{background:#176d57;color:white;border:1px solid #53dbaf;border-radius:7px;padding:8px;margin:2px;cursor:pointer;font:inherit}
+#jv-panel input{width:100%;background:#fff;color:#111;border-radius:5px;padding:7px;box-sizing:border-box;margin-top:5px}
+#jv-panel details>summary{cursor:pointer;font-weight:bold;padding:4px}#jv-status{font-size:12px;min-height:20px;margin-top:4px}
+#jv-peer-cursor{position:fixed;z-index:2147483500;pointer-events:none;font-size:24px;display:none;text-shadow:0 1px 3px #000}
+</style>
+<div id="jv-panel"><details><summary>💚 JARVIS · Speichern & Multiplayer</summary>
+<div><button id="jv-save">💾 Speichern</button><button id="jv-load">📂 Laden</button></div>
+<div><button id="jv-host">🌍 Raum erstellen</button><button id="jv-join">🔗 Beitreten</button></div>
+<input id="jv-room" placeholder="Raumcode hier eingeben" autocomplete="off" aria-label="Raumcode">
+<div id="jv-status" aria-live="polite">Spielstand nur auf diesem Gerät. Multiplayer: Verbindung und Mitspieler-Cursor (Testmodus).</div>
+</details></div><div id="jv-peer-cursor">👆</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id), status=msg=>$('jv-status').textContent=msg;
+$('jv-save').onclick=()=>{try{saveGame();;status('💾 Gespeichert auf diesem Gerät.')}catch(e){status('Speichern fehlgeschlagen: '+e.message)}};
+$('jv-load').onclick=()=>{try{location.reload();;status('📂 Geladen.')}catch(e){status('Laden fehlgeschlagen: '+e.message)}};
+let peer=null,connections=[];
+function attach(conn){connections.push(conn);conn.on('open',()=>{status('🟢 Verbunden mit '+conn.peer+' · Cursor-Testmodus');});conn.on('data',d=>{if(d&&d.type==='cursor'){let c=$('jv-peer-cursor');c.style.display='block';c.style.left=(d.x*innerWidth)+'px';c.style.top=(d.y*innerHeight)+'px'}});conn.on('close',()=>{connections=connections.filter(c=>c!==conn);status('Verbindung beendet')});conn.on('error',e=>status('Verbindungsfehler: '+e.message))}
+function newPeer(id){if(typeof Peer==='undefined'){status('PeerJS konnte nicht geladen werden. Internet prüfen.');return null}if(peer)peer.destroy();peer=new Peer(id,{debug:0});peer.on('error',e=>status('Fehler: '+e.message));peer.on('connection',attach);return peer}
+$('jv-host').onclick=()=>{const code='JV-'+Math.random().toString(36).slice(2,8).toUpperCase();let p=newPeer(code);if(!p)return;p.on('open',id=>{$('jv-room').value=id;status('Raum '+id+' bereit. Code teilen!')})};
+$('jv-join').onclick=()=>{const code=$('jv-room').value.trim();if(!code){status('Bitte Raumcode eingeben.');return}let p=newPeer();if(!p)return;p.on('open',()=>attach(p.connect(code,{reliable:true})))};
+let last=0;document.addEventListener('pointermove',e=>{let now=Date.now();if(now-last<120)return;last=now;for(const c of connections)if(c.open)c.send({type:'cursor',x:e.clientX/innerWidth,y:e.clientY/innerHeight})},{passive:true});
+})();
+</script>
 </body>
 </html>
