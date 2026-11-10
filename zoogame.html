@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zoo Game Evolution Deluxe Sound</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:Arial,sans-serif}
+body{
+  background:linear-gradient(180deg,#0d1018,#111);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px;
+  overflow:hidden;
+}
+#wrap{
+  display:flex;
+  gap:0;
+  width:820px;
+  max-width:100%;
+  background:#1a1a1a;
+  border-radius:18px;
+  overflow:hidden;
+  position:relative;
+  box-shadow:0 18px 60px rgba(0,0,0,0.45);
+}
+#sidebar{
+  width:78px;
+  background:linear-gradient(180deg,#2b2b2b,#202020);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:10px 6px;
+  gap:8px;
+  z-index:50;
+  flex-shrink:0;
+  height:620px;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+#sidebar::-webkit-scrollbar{width:3px}
+#sidebar::-webkit-scrollbar-thumb{background:#555;border-radius:2px}
+#sidebar .sid-title{
+  color:#aaa;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  margin-bottom:2px;
+}
+.inv-item{
+  width:56px;
+  background:#3a3a3a;
+  border-radius:11px;
+  padding:6px 4px;
+  text-align:center;
+  cursor:pointer;
+  border:2px solid transparent;
+  transition:0.15s;
+  position:relative;
+  flex-shrink:0;
+}
+.inv-item:hover{background:#444}
+.inv-item.on{border-color:#f0d050;background:#4a4a2a}
+.inv-item .iico{font-size:22px;display:block;line-height:1}
+.inv-item .iname{font-size:9px;color:#bbb;margin-top:3px;line-height:1.2}
+.inv-item .icount{
+  position:absolute;
+  top:3px;
+  right:5px;
+  font-size:9px;
+  font-weight:700;
+  color:#f0d050;
+}
+.inv-divider{width:46px;height:1px;background:#444;margin:2px 0;flex-shrink:0}
+.mb{
+  width:56px;
+  background:#3a3a3a;
+  border:2px solid transparent;
+  border-radius:10px;
+  padding:6px 3px;
+  font-size:10px;
+  cursor:pointer;
+  font-weight:700;
+  color:#ccc;
+  text-align:center;
+  line-height:1.3;
+  transition:0.15s;
+  flex-shrink:0;
+}
+.mb:hover{background:#444}
+.mb.on{border-color:#5aaa40;background:#2a4a2a;color:#8edd6e}
+#scorebox{
+  background:rgba(255,255,255,0.94);
+  border-radius:9px;
+  padding:5px 10px;
+  font-size:13px;
+  font-weight:800;
+  color:#222;
+  width:56px;
+  text-align:center;
+  flex-shrink:0;
+}
+#shopbtn{
+  width:56px;
+  background:rgba(255,220,50,0.18);
+  border:2px solid #f0d050;
+  border-radius:10px;
+  padding:6px 3px;
+  font-size:10px;
+  cursor:pointer;
+  font-weight:700;
+  color:#f0d050;
+  text-align:center;
+  line-height:1.4;
+  flex-shrink:0;
+}
+#shopbtn:hover{background:rgba(255,220,50,0.28)}
+#pausebtn{
+  width:56px;
+  background:rgba(255,255,255,0.12);
+  border:2px solid #ffffff;
+  border-radius:10px;
+  padding:6px 3px;
+  font-size:10px;
+  cursor:pointer;
+  font-weight:700;
+  color:#fff;
+  text-align:center;
+  line-height:1.4;
+  flex-shrink:0;
+}
+#pausebtn:hover{background:rgba(255,255,255,0.22)}
+#musicbtn{
+  width:56px;
+  background:rgba(90,255,160,0.12);
+  border:2px solid #71ffb5;
+  border-radius:10px;
+  padding:6px 3px;
+  font-size:10px;
+  cursor:pointer;
+  font-weight:700;
+  color:#71ffb5;
+  text-align:center;
+  line-height:1.4;
+  flex-shrink:0;
+}
+#musicbtn:hover{background:rgba(90,255,160,0.22)}
+
+#zoo{
+  position:relative;
+  flex:1;
+  height:620px;
+  overflow:hidden;
+  background:#5a9e4a;
+  cursor:grab;
+}
+#zoo.dragging{cursor:grabbing}
+#zoomap{
+  position:absolute;
+  width:760px;
+  height:1100px;
+  top:0;
+  left:0;
+  will-change:transform;
+}
+.ph,.pv{position:absolute;z-index:1}
+.enc{
+  position:absolute;
+  border:3px solid #6b4f2a;
+  border-radius:12px;
+  z-index:2;
+}
+.enc-lbl{
+  position:absolute;
+  top:4px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:10px;
+  font-weight:700;
+  color:#3a2a10;
+  background:rgba(255,255,240,0.9);
+  padding:2px 6px;
+  border-radius:5px;
+  white-space:nowrap;
+  z-index:5;
+}
+.animal{
+  position:absolute;
+  font-size:24px;
+  cursor:pointer;
+  z-index:10;
+  user-select:none;
+  transition:transform 0.15s,filter 0.2s;
+}
+.animal:hover{filter:brightness(1.08)}
+.hbw{
+  position:absolute;
+  bottom:-8px;
+  left:50%;
+  transform:translateX(-50%);
+  width:28px;
+  height:4px;
+  background:#888;
+  border-radius:2px;
+}
+.hb{
+  height:4px;
+  border-radius:2px;
+  background:#2db52d;
+  transition:width 0.4s,background 0.4s;
+}
+.animal-badge{
+  position:absolute;
+  top:-16px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:10px;
+  background:rgba(0,0,0,0.72);
+  color:#fff;
+  padding:2px 6px;
+  border-radius:8px;
+  white-space:nowrap;
+  pointer-events:none;
+}
+.visitor{
+  position:absolute;
+  z-index:20;
+  pointer-events:none;
+  transition:left 1.5s linear,top 1.5s linear;
+}
+.vhead{width:9px;height:9px;border-radius:50%;margin:0 auto}
+.vbody{width:12px;height:11px;border-radius:4px;margin:1px auto 0}
+.bubble{
+  position:absolute;
+  bottom:22px;
+  left:11px;
+  background:#fff;
+  border:1.5px solid #888;
+  border-radius:7px;
+  padding:2px 5px;
+  font-size:10px;
+  white-space:nowrap;
+  z-index:30;
+  line-height:1.2;
+}
+.bubble::after{
+  content:'';
+  position:absolute;
+  bottom:-6px;
+  left:5px;
+  border:3px solid transparent;
+  border-top-color:#fff;
+}
+.camst{
+  position:absolute;
+  width:30px;
+  height:30px;
+  background:#111;
+  border-radius:8px;
+  border:2.5px solid #FFD700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  z-index:25;
+  cursor:pointer;
+}
+.photo-pop{
+  position:absolute;
+  z-index:99;
+  pointer-events:none;
+  border:4px solid white;
+  border-radius:8px;
+  background:#eee;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+}
+.tree{position:absolute;font-size:20px;z-index:3;pointer-events:none}
+.pond{position:absolute;border-radius:50%;border:3px solid #3a7baa;z-index:2}
+.fring{
+  position:absolute;
+  border:3px solid #ffe566;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:98;
+  animation:ro 0.5s ease-out forwards;
+}
+@keyframes ro{
+  0%{width:10px;height:10px;opacity:1;margin:-5px}
+  100%{width:68px;height:68px;opacity:0;margin:-34px}
+}
+.fmsg{
+  position:absolute;
+  font-size:13px;
+  font-weight:700;
+  color:#fff;
+  text-shadow:0 1px 4px #000;
+  pointer-events:none;
+  z-index:95;
+  transition:top 0.85s,opacity 0.85s;
+}
+#toast{
+  position:absolute;
+  bottom:16px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(180,30,30,0.92);
+  color:#fff;
+  border-radius:10px;
+  padding:8px 18px;
+  font-size:13px;
+  font-weight:700;
+  z-index:300;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 0.3s;
+  white-space:nowrap;
+}
+#toast.show{opacity:1}
+
+#shopov,#bookov,#menuov,#pauseov{
+  position:absolute;
+  inset:0;
+  z-index:200;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  border-radius:18px;
+}
+#shopov{background:rgba(0,0,0,0.72)}
+#shopov.open{display:flex}
+#pauseov{background:rgba(0,0,0,0.72);z-index:250}
+#pauseov.open{display:flex}
+
+.panel{
+  background:white;
+  border-radius:16px;
+  padding:22px;
+  width:320px;
+  max-width:90%;
+  max-height:90vh;
+  overflow-y:auto;
+}
+.panel h2{font-size:17px;font-weight:800;margin-bottom:6px;color:#222}
+.panel p{font-size:12px;color:#666;margin-bottom:14px;line-height:1.5}
+
+#shoppanel h2{font-size:17px;font-weight:800;margin-bottom:4px;color:#222}
+#shoppts{font-size:12px;color:#888;margin-bottom:14px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.scard{border:1.5px solid #ddd;border-radius:10px;padding:10px;text-align:center}
+.scard.owned{border-color:#3a7a30;background:#f0fff0}
+.scard.cur{border-color:#e07a20;background:#fff8ee}
+.sico{font-size:30px;display:block;margin-bottom:3px}
+.sname{font-size:12px;font-weight:700;color:#222}
+.sprice{font-size:11px;color:#999;margin-top:2px}
+.sbtn{
+  margin-top:6px;
+  background:#2d6e22;
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:5px 12px;
+  font-size:11px;
+  cursor:pointer;
+  font-weight:700;
+}
+.sbtn:disabled{background:#bbb;cursor:default}
+#exitbtn,.bigbtn{
+  width:100%;
+  padding:11px;
+  color:white;
+  border:none;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:800;
+  cursor:pointer;
+  margin-top:8px;
+}
+#exitbtn{background:#c0392b}
+#exitbtn:hover{background:#a93226}
+.bigbtn.green{background:#2d8a35}
+.bigbtn.green:hover{background:#26742d}
+.bigbtn.gold{background:#d6a100}
+.bigbtn.gold:hover{background:#bf9000}
+.bigbtn.dark{background:#333}
+.bigbtn.dark:hover{background:#222}
+
+.color-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin-top:10px;
+  margin-bottom:10px;
+}
+.color-btn{
+  border:none;
+  border-radius:10px;
+  padding:14px 8px;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+}
+.color-white{background:#ffffff;color:#111;border:2px solid #ccc}
+.color-black{background:#111111;color:#fff;border:2px solid #444}
+.color-green{background:#4caf50;color:#fff;border:2px solid #2e7d32}
+.color-yellow{background:#f4d03f;color:#222;border:2px solid #c9a510}
+
+#bookov{
+  background:rgba(0,0,0,0.82);
+  z-index:220;
+}
+#bookov.open{display:flex}
+#bookpanel{
+  width:720px;
+  max-width:96%;
+  height:92%;
+  max-height:92vh;
+  background:linear-gradient(90deg,#e8d9b5 0%,#f6edd8 48%,#e8d9b5 100%);
+  border-radius:18px;
+  box-shadow:0 16px 40px rgba(0,0,0,0.5);
+  border:5px solid #9b7448;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.book-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 16px 10px;
+  border-bottom:2px solid rgba(120,80,30,0.2);
+}
+.book-title{font-size:22px;color:#4d3217;font-weight:800}
+.book-sub{font-size:12px;color:#7a5b33;margin-top:3px}
+.book-close{
+  border:none;
+  background:#9f352d;
+  color:#fff;
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:18px;
+  font-weight:800;
+}
+.book-body{
+  flex:1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0;
+  min-height:0;
+}
+.book-page{
+  padding:18px;
+  overflow:auto;
+  position:relative;
+}
+.book-page.left{border-right:2px solid rgba(120,80,30,0.14)}
+.page-num{
+  position:absolute;
+  bottom:10px;
+  font-size:12px;
+  color:#8a6c43;
+}
+.left .page-num{left:18px}
+.right .page-num{right:18px}
+.book-animal-big{
+  font-size:84px;
+  text-align:center;
+  margin-top:6px;
+  margin-bottom:8px;
+}
+.book-animal-name{
+  font-size:24px;
+  color:#4a2d16;
+  text-align:center;
+  font-weight:800;
+  margin-bottom:8px;
+}
+.book-desc{
+  font-size:13px;
+  color:#6b5232;
+  text-align:center;
+  line-height:1.5;
+  margin-bottom:12px;
+}
+.evo-list{display:flex;flex-direction:column;gap:12px}
+.evo-card{
+  background:rgba(255,255,255,0.55);
+  border:2px solid rgba(130,95,45,0.22);
+  border-radius:14px;
+  padding:10px;
+  display:grid;
+  grid-template-columns:72px 1fr;
+  gap:10px;
+  align-items:center;
+}
+.evo-icon{font-size:42px;text-align:center}
+.evo-name{font-size:14px;font-weight:800;color:#4a2d16}
+.evo-meta{font-size:11px;color:#7a5c36;margin-top:3px}
+.evo-text{font-size:11px;color:#6b5232;margin-top:4px;line-height:1.45}
+.book-nav{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  padding:10px 16px 16px;
+}
+.book-btn{
+  background:#7d5b34;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  padding:10px 18px;
+  font-size:14px;
+  cursor:pointer;
+  font-weight:800;
+}
+.book-btn:disabled{opacity:0.4;cursor:default}
+
+#menuov{
+  display:flex;
+  z-index:260;
+  background:
+    radial-gradient(circle at top,#2c5f31 0%,#143416 38%,#0a0f12 100%);
+}
+#menuCard{
+  width:520px;
+  max-width:92%;
+  padding:28px 24px;
+  border-radius:24px;
+  background:rgba(15,18,18,0.82);
+  border:2px solid rgba(255,255,255,0.08);
+  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  backdrop-filter:blur(4px);
+}
+.menu-zoo{
+  font-size:56px;
+  margin-bottom:8px;
+}
+.menu-title{
+  font-size:38px;
+  font-weight:900;
+  letter-spacing:1px;
+  color:#fff3b0;
+  text-shadow:0 0 20px rgba(255,220,80,0.25);
+}
+.menu-sub{
+  margin-top:8px;
+  color:#cfd8cf;
+  font-size:14px;
+  line-height:1.6;
+}
+.menu-by{
+  margin-top:14px;
+  color:#9effa3;
+  font-size:15px;
+  font-weight:800;
+}
+.menu-small{
+  margin-top:6px;
+  color:#bfc7bf;
+  font-size:12px;
+}
+.menu-actions{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:22px;
+}
+.menu-btn{
+  padding:12px 18px;
+  min-width:150px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:15px;
+  font-weight:800;
+  transition:0.15s;
+}
+.menu-btn.play{background:#ffd84d;color:#2b2200}
+.menu-btn.play:hover{transform:translateY(-1px);background:#ffe57a}
+.menu-btn.secondary{background:#2d3b2f;color:#d6ffd9;border:1px solid #4c8f53}
+.menu-btn.secondary:hover{transform:translateY(-1px);background:#38533b}
+.menu-btn.multi{background:#111;color:#f0d050;border:2px solid #f0d050;position:relative;overflow:hidden;}
+.menu-btn.multi:hover{transform:translateY(-1px);background:#1a1a00;}
+.multi-pulse{position:absolute;inset:0;border-radius:12px;border:2px solid #f0d050;animation:mpulse 1.6s ease-in-out infinite;pointer-events:none;}
+@keyframes mpulse{0%,100%{opacity:0.9;transform:scale(1);}50%{opacity:0;transform:scale(1.08);}}
+.multi-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#4cff88;margin-right:6px;animation:blink 1.2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+
+#multiov{position:absolute;inset:0;z-index:270;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;border-radius:18px;}
+#multiov.open{display:flex;}
+#multipanel{width:480px;max-width:94%;background:#0e1a10;border-radius:18px;border:2px solid #2a5a30;padding:0;overflow:hidden;}
+.mp-header{background:#0a1a0c;padding:18px 22px 14px;border-bottom:1px solid #1a3a1e;display:flex;justify-content:space-between;align-items:center;}
+.mp-header h2{color:#9effa3;font-size:17px;font-weight:800;margin:0;}
+.mp-close{background:#3a0a0a;border:none;color:#ff9a9a;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;font-weight:800;}
+.mp-close:hover{background:#5a1010;}
+.mp-section{padding:16px 22px;}
+.mp-label{font-size:11px;font-weight:700;color:#5a8a60;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+.mp-code-row{display:flex;gap:8px;margin-bottom:14px;}
+.mp-code-input{flex:1;background:#1a2e1e;border:1.5px solid #2a5a30;border-radius:10px;padding:10px 14px;color:#9effa3;font-size:22px;font-weight:900;letter-spacing:6px;text-align:center;outline:none;font-family:monospace;}
+.mp-code-input::placeholder{font-size:14px;letter-spacing:1px;color:#3a5a3e;}
+.mp-bigbtn{border:none;border-radius:10px;padding:11px 18px;font-size:14px;font-weight:800;cursor:pointer;transition:0.15s;}
+.mp-bigbtn:hover{transform:translateY(-1px);}
+.mp-bigbtn.host{background:#f0d050;color:#2b2200;width:100%;margin-bottom:8px;}
+.mp-bigbtn.join{background:#4cff88;color:#0a2a14;width:100%;}
+.mp-bigbtn.cancel{background:#2a2a2a;color:#aaa;width:100%;margin-top:6px;}
+.mp-divider{height:1px;background:#1a3a1e;margin:4px 0 14px;}
+.mp-lobby{padding:16px 22px;display:none;}
+.mp-lobby.show{display:block;}
+.mp-lobby-title{color:#9effa3;font-size:15px;font-weight:800;margin-bottom:12px;}
+.player-row{display:flex;align-items:center;gap:10px;background:#1a2e1e;border-radius:10px;padding:10px 14px;margin-bottom:8px;border:1.5px solid #2a4a2e;}
+.player-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.player-info{flex:1;}
+.player-name{font-size:13px;font-weight:700;color:#d6ffd9;}
+.player-status{font-size:10px;color:#5a8a60;margin-top:1px;}
+.player-action{background:#1a3a2a;border:1px solid #3a6a40;color:#9effa3;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-weight:700;}
+.player-action:hover{background:#2a4a32;}
+.mp-your-code{background:#1a2e1e;border-radius:10px;padding:12px 14px;text-align:center;margin-bottom:10px;}
+.mp-your-code .code-val{font-size:28px;font-weight:900;color:#f0d050;letter-spacing:8px;font-family:monospace;}
+.mp-your-code .code-hint{font-size:11px;color:#5a8a60;margin-top:4px;}
+.mp-status-bar{background:#0a1a0c;padding:10px 22px;border-top:1px solid #1a3a1e;font-size:11px;color:#5a8a60;text-align:center;}
+.ping-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#4cff88;margin-right:5px;vertical-align:middle;}
+
+#multibtn-ingame{
+  width:56px;background:rgba(240,208,80,0.15);border:2px solid #f0d050;border-radius:10px;
+  padding:6px 3px;font-size:10px;cursor:pointer;font-weight:700;color:#f0d050;text-align:center;line-height:1.4;flex-shrink:0;position:relative;
+}
+#multibtn-ingame:hover{background:rgba(240,208,80,0.28);}
+#multibtn-ingame .mp-live-dot{position:absolute;top:4px;right:5px;width:7px;height:7px;border-radius:50%;background:#4cff88;display:none;animation:blink 1.2s infinite;}
+#multibtn-ingame.connected .mp-live-dot{display:block;}
+
+#travelov{position:absolute;inset:0;z-index:280;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;border-radius:18px;}
+#travelov.open{display:flex;}
+#travelpanel{width:400px;max-width:94%;background:#0e1218;border-radius:16px;border:2px solid #2a3a5a;padding:0;overflow:hidden;}
+.tv-header{background:#080e18;padding:16px 20px 12px;border-bottom:1px solid #1a2a40;}
+.tv-header h2{color:#9abaff;font-size:16px;font-weight:800;margin:0;}
+.tv-list{padding:14px 20px;}
+.tv-card{background:#131c2a;border:1.5px solid #1e2e4a;border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:0.15s;}
+.tv-card:hover{border-color:#4a6aaa;background:#1a2538;}
+.tv-card .tv-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.tv-card .tv-info{flex:1;}
+.tv-card .tv-name{font-size:13px;font-weight:700;color:#c0d4ff;}
+.tv-card .tv-detail{font-size:11px;color:#5a7aaa;margin-top:2px;}
+.tv-card .tv-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;}
+.tv-badge.master{background:#2a1a00;color:#f0d050;border:1px solid #f0d050;}
+.tv-badge.friend{background:#0a2a1a;color:#4cff88;border:1px solid #4cff88;}
+.tv-card .tv-go{background:#1e3060;border:none;color:#9abaff;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;}
+.tv-card .tv-go:hover{background:#2a4080;}
+.tv-close-btn{width:100%;padding:10px;background:#1a1a1a;border:none;color:#888;border-radius:0 0 14px 14px;cursor:pointer;font-size:13px;font-weight:700;}
+.tv-close-btn:hover{background:#222;color:#aaa;}
+
+#travel-flash{position:absolute;inset:0;background:#fff;z-index:400;pointer-events:none;opacity:0;border-radius:18px;transition:opacity 0.3s;}
+
+.menu-saveinfo{
+  margin-top:18px;
+  font-size:12px;
+  color:#b7c4b8;
+  line-height:1.5;
+}
+
+@media (max-width:700px){
+  #bookpanel{height:96%}
+  .book-body{grid-template-columns:1fr}
+  .book-page.left{border-right:none;border-bottom:2px solid rgba(120,80,30,0.14)}
+  .menu-title{font-size:30px}
+}
+</style>
+</head>
+<body>
+
+<div id="wrap">
+
+  <div id="menuov">
+    <div id="menuCard">
+      <div class="menu-zoo">🦁🌿📖</div>
+      <div class="menu-title">ZOO GAME</div>
+      <div class="menu-sub">
+        Füttere Tiere, levele sie hoch, schalte Evolutionen frei und blättere
+        im Evolutionsbuch durch alle Tierformen.
+      </div>
+      <div class="menu-by">by Joy / JellyCraft aka</div>
+      <div class="menu-actions">
+        <button class="menu-btn play" onclick="startGame()">▶ Spiel starten</button>
+        <button class="menu-btn multi" onclick="openMulti()">
+          <div class="multi-pulse"></div>
+          <span class="multi-dot"></span>Multiplayer
+        </button>
+        <button class="menu-btn secondary" onclick="openBookFromMenu()">📖 Buch öffnen</button>
+        <button class="menu-btn secondary" onclick="resetSave()">🗑 Save löschen</button>
+      </div>
+
+      <div class="menu-saveinfo">
+        Fortschritt wird automatisch gespeichert:<br>
+        Punkte, Hintergrund, Jahreszeiten, Tier-Level, XP, Hunger, Evolutionen und Soundstatus.
+      </div>
+    </div>
+  </div>
+
+  <div id="pauseov">
+    <div class="panel">
+      <h2>⏸ Pause</h2>
+      <p>Wähle eine Hintergrundfarbe oder gehe zurück ins Hauptmenü.</p>
+
+      <div class="color-grid">
+        <button class="color-btn color-white" onclick="setCustomBg('white')">Weiß</button>
+        <button class="color-btn color-black" onclick="setCustomBg('black')">Schwarz</button>
+        <button class="color-btn color-green" onclick="setCustomBg('green')">Grün</button>
+        <button class="color-btn color-yellow" onclick="setCustomBg('yellow')">Gelb</button>
+      </div>
+
+      <button class="bigbtn green" onclick="resumeGame()">▶ Weiter</button>
+      <button class="bigbtn gold" onclick="goMainMenu()">🏠 Hauptmenü</button>
+      <button class="bigbtn dark" onclick="closePause()">✖ Schließen</button>
+    </div>
+  </div>
+
+  <div id="shopov">
+    <div id="shoppanel" class="panel">
+      <h2>🗺 Themen kaufen</h2>
+      <div id="shoppts"></div>
+      <div class="sgrid" id="sgrid"></div>
+      <button id="exitbtn" onclick="closeShop()">← Zurück zum Zoo</button>
+    </div>
+  </div>
+
+  <div id="bookov">
+    <div id="bookpanel">
+      <div class="book-top">
+        <div>
+          <div class="book-title">📖 Tier-Evolutionsbuch</div>
+          <div class="book-sub">Blättere durch die Seiten und sieh alle Evolutionsstufen</div>
+        </div>
+        <button class="book-close" onclick="closeBook()">✕</button>
+      </div>
+
+      <div class="book-body">
+        <div class="book-page left" id="bookLeft"></div>
+        <div class="book-page right" id="bookRight"></div>
+      </div>
+
+      <div class="book-nav">
+        <button class="book-btn" id="bookPrev" onclick="prevBookPage()">← Zurück</button>
+        <button class="book-btn" id="bookNext" onclick="nextBookPage()">Weiter →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sidebar">
+    <div id="scorebox">⭐<br><span id="pts">0</span></div>
+    <div class="sid-title">Inventar</div>
+
+    <div class="inv-item on" id="item-feed" onclick="selectItem('feed')">
+      <span class="iico">🍎</span>
+      <div class="iname">Futter</div>
+      <span class="icount" id="cnt-feed">∞</span>
+    </div>
+    <div class="inv-item" id="item-med" onclick="selectItem('med')">
+      <span class="iico">💊</span>
+      <div class="iname">Medizin</div>
+      <span class="icount" id="cnt-med">5</span>
+    </div>
+    <div class="inv-item" id="item-play" onclick="selectItem('play')">
+      <span class="iico">🎾</span>
+      <div class="iname">Spielzeug</div>
+      <span class="icount" id="cnt-play">∞</span>
+    </div>
+    <div class="inv-item" id="item-groom" onclick="selectItem('groom')">
+      <span class="iico">🪥</span>
+      <div class="iname">Bürste</div>
+      <span class="icount" id="cnt-groom">∞</span>
+    </div>
+    <div class="inv-item" id="item-photo" onclick="selectItem('photo')">
+      <span class="iico">📸</span>
+      <div class="iname">Kamera</div>
+      <span class="icount" id="cnt-photo">∞</span>
+    </div>
+
+    <div class="inv-divider"></div>
+
+    <button class="mb on" id="mb-walk" onclick="selectItem('walk')">👣<br>Normal</button>
+    <button class="mb" onclick="openBook()">📖<br>Book</button>
+    <button id="musicbtn" onclick="toggleMusic()">🎵<br><span id="musicState">ON</span></button>
+    <button id="pausebtn" onclick="openPause()">⏸<br>Pause</button>
+    <button id="shopbtn" onclick="openShop()">🛍<br>Shop</button>
+    <button id="multibtn-ingame" onclick="openTravel()">✈️<br>Reisen<div class="mp-live-dot"></div></button>
+  </div>
+
+  <div id="zoo">
+    <div id="zoomap"></div>
+    <div id="toast"></div>
+  </div>
+
+  <div id="multiov">
+    <div id="multipanel">
+      <div class="mp-header">
+        <h2>🌐 Multiplayer</h2>
+        <button class="mp-close" onclick="closeMulti()">✕</button>
+      </div>
+      <div class="mp-section" id="mp-join-section">
+        <div class="mp-label">Spiel beitreten</div>
+        <div class="mp-code-row">
+          <input class="mp-code-input" id="mp-join-input" maxlength="4" placeholder="CODE" oninput="this.value=this.value.toUpperCase()"/>
+        </div>
+        <button class="mp-bigbtn join" onclick="joinGame()">🚀 Beitreten</button>
+        <div class="mp-divider"></div>
+        <div class="mp-label">Spiel hosten</div>
+        <button class="mp-bigbtn host" onclick="hostGame()">⚡ Lobby erstellen</button>
+        <button class="mp-bigbtn cancel" onclick="closeMulti()">← Zurück</button>
+      </div>
+      <div class="mp-lobby" id="mp-lobby-section">
+        <div class="mp-your-code">
+          <div class="code-val" id="mp-room-code">----</div>
+          <div class="code-hint">Teile diesen Code mit Freunden</div>
+        </div>
+        <div class="mp-lobby-title" id="mp-lobby-title">Spieler in der Lobby</div>
+        <div id="mp-player-list"></div>
+        <button class="mp-bigbtn host" onclick="startMultiGame()" id="mp-start-btn" style="margin-top:4px;">▶ Spiel starten</button>
+        <button class="mp-bigbtn cancel" onclick="leaveLobby()">← Lobby verlassen</button>
+      </div>
+      <div class="mp-status-bar"><span class="ping-dot"></span>Simulated Local Multiplayer</div>
+    </div>
+  </div>
+
+  <div id="travelov">
+    <div id="travelpanel">
+      <div class="tv-header">
+        <h2>✈️ Reisen — Wähle ein Ziel</h2>
+      </div>
+      <div class="tv-list" id="tv-list"></div>
+      <button class="tv-close-btn" onclick="closeTravel()">← Abbrechen</button>
+    </div>
+  </div>
+  <div id="travel-flash"></div>
+
+</div>
+
+
+
+<script>
+const SAVE_KEY='zoo_game_evolution_deluxe_v3';
+
+const zoo=document.getElementById('zoo');
+const zoomap=document.getElementById('zoomap');
+const ptsEl=document.getElementById('pts');
+
+let pts=0,mode='feed';
+let isPaused=false;
+let musicOn=true;
+const inventory={feed:Infinity,med:5,play:Infinity,groom:Infinity,photo:Infinity,walk:null};
+
+let panX=0,panY=0,dragging=false,dragStartX=0,dragStartY=0,panStartX=0,panStartY=0;
+const MAP_W=760,MAP_H=1100;
+
+const BG_COLORS={
+  green:'#5a9e4a',
+  white:'#f5f5f5',
+  black:'#111111',
+  yellow:'#f4d03f'
+};
+let customBg='green';
+
+let audioCtx=null;
+let musicTimer=null;
+let musicPulse=0;
+
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  }
+  if(audioCtx.state==='suspended'){
+    audioCtx.resume();
+  }
+}
+function tone(type,freq,duration,volume,start=0){
+  ensureAudio();
+  const now=audioCtx.currentTime+start;
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  osc.type=type;
+  osc.frequency.setValueAtTime(freq,now);
+  gain.gain.setValueAtTime(volume,now);
+  gain.gain.exponentialRampToValueAtTime(0.0001,now+duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now+duration);
+}
+function noise(duration,volume,highpass=800,start=0){
+  ensureAudio();
+  const buffer=audioCtx.createBuffer(1,audioCtx.sampleRate*duration,audioCtx.sampleRate);
+  const data=buffer.getChannelData(0);
+  for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1);
+  const source=audioCtx.createBufferSource();
+  const filter=audioCtx.createBiquadFilter();
+  const gain=audioCtx.createGain();
+  filter.type='highpass';
+  filter.frequency.value=highpass;
+  source.buffer=buffer;
+  const now=audioCtx.currentTime+start;
+  gain.gain.setValueAtTime(volume,now);
+  gain.gain.exponentialRampToValueAtTime(0.0001,now+duration);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  source.start(now);
+  source.stop(now+duration);
+}
+
+const sfx={
+  feed(){
+    tone('sine',620,0.07,0.12,0);
+    tone('triangle',760,0.09,0.09,0.04);
+  },
+  med(){
+    tone('sine',420,0.07,0.14,0);
+    tone('sine',280,0.14,0.12,0.05);
+    noise(0.03,0.03,1200,0.02);
+  },
+  play(){
+    noise(0.08,0.08,1000,0);
+    tone('sawtooth',520,0.08,0.05,0.01);
+    tone('triangle',780,0.06,0.05,0.06);
+  },
+  groom(){
+    noise(0.12,0.06,1800,0);
+    tone('triangle',900,0.08,0.05,0.04);
+  },
+  level(){
+    tone('triangle',520,0.12,0.14,0);
+    tone('triangle',680,0.12,0.13,0.09);
+    tone('triangle',860,0.18,0.12,0.18);
+  },
+  coin(){
+    tone('square',900,0.08,0.11,0);
+    tone('square',1250,0.10,0.08,0.05);
+  },
+  camera(){
+    noise(0.035,0.12,900,0);
+    tone('square',240,0.03,0.03,0.01);
+  }
+};
+
+function updateMusicButton(){
+  document.getElementById('musicState').textContent=musicOn?'ON':'OFF';
+}
+function startMusicLoop(){
+  if(musicTimer) clearInterval(musicTimer);
+  if(!musicOn || isPaused) return;
+  playMusicBar();
+  musicTimer=setInterval(()=>{
+    if(musicOn && !isPaused && document.getElementById('menuov').style.display==='none'){
+      playMusicBar();
+    }
+  },2400);
+}
+function stopMusicLoop(){
+  if(musicTimer){
+    clearInterval(musicTimer);
+    musicTimer=null;
+  }
+}
+function playMusicBar(){
+  ensureAudio();
+  const seqA=[262,330,392,330];
+  const seqB=[220,294,349,294];
+  const seq=(musicPulse++%2===0)?seqA:seqB;
+  seq.forEach((f,i)=>{
+    tone('triangle',f,0.28,0.03,i*0.28);
+    tone('sine',f/2,0.32,0.02,i*0.28);
+  });
+}
+function toggleMusic(){
+  musicOn=!musicOn;
+  updateMusicButton();
+  saveGame();
+  if(musicOn){
+    startMusicLoop();
+    showToast('Musik AN');
+  }else{
+    stopMusicLoop();
+    showToast('Musik AUS');
+  }
+}
+
+function clampPan(x,y){
+  const vw=zoo.clientWidth,vh=zoo.clientHeight;
+  return{
+    x:Math.min(0,Math.max(vw-MAP_W,x)),
+    y:Math.min(0,Math.max(vh-MAP_H,y))
+  };
+}
+function applyPan(){zoomap.style.transform=`translate(${panX}px,${panY}px)`;}
+
+zoo.addEventListener('mousedown',e=>{
+  if(isPaused)return;
+  if(e.target.closest('.animal,.camst,.inv-item,.mb,.sbtn,#shopbtn,#exitbtn,.book-close,.book-btn,.menu-btn,#pausebtn,.bigbtn,.color-btn,#musicbtn'))return;
+  dragging=true;
+  dragStartX=e.clientX;
+  dragStartY=e.clientY;
+  panStartX=panX;
+  panStartY=panY;
+  zoo.classList.add('dragging');
+  e.preventDefault();
+});
+window.addEventListener('mousemove',e=>{
+  if(!dragging || isPaused)return;
+  const dx=e.clientX-dragStartX,dy=e.clientY-dragStartY;
+  const c=clampPan(panStartX+dx,panStartY+dy);
+  panX=c.x;panY=c.y;
+  applyPan();
+});
+window.addEventListener('mouseup',()=>{
+  dragging=false;
+  zoo.classList.remove('dragging');
+});
+zoo.addEventListener('touchstart',e=>{
+  if(isPaused)return;
+  if(e.target.closest('.animal,.camst'))return;
+  const t=e.touches[0];
+  dragging=true;
+  dragStartX=t.clientX;
+  dragStartY=t.clientY;
+  panStartX=panX;
+  panStartY=panY;
+},{passive:true});
+zoo.addEventListener('touchmove',e=>{
+  if(!dragging || isPaused)return;
+  const t=e.touches[0],dx=t.clientX-dragStartX,dy=t.clientY-dragStartY;
+  const c=clampPan(panStartX+dx,panStartY+dy);
+  panX=c.x;panY=c.y;
+  applyPan();
+  e.preventDefault();
+},{passive:false});
+zoo.addEventListener('touchend',()=>{dragging=false});
+
+function selectItem(m){
+  mode=m;
+  ['feed','med','play','groom','photo'].forEach(k=>{
+    document.getElementById('item-'+k)?.classList.toggle('on',k===m);
+  });
+  document.getElementById('mb-walk').classList.toggle('on',m==='walk');
+}
+function addPts(n){
+  pts+=n;
+  ptsEl.textContent=pts;
+  renderShopPts();
+  sfx.coin();
+  saveGame();
+}
+function renderShopPts(){
+  const e=document.getElementById('shoppts');
+  if(e)e.textContent='Deine Punkte: '+pts+' ⭐';
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+const seasons=[
+  {id:'spring',name:'Frühling',icon:'🌸',bg:'#5a9e4a',ph:'#c8b98a',enc:'rgba(80,150,60,0.38)',pond:'#6ab4e8',price:0,owned:true},
+  {id:'summer',name:'Sommer',icon:'☀️',bg:'#4a9c30',ph:'#d4c46a',enc:'rgba(50,120,30,0.38)',pond:'#5bbce8',price:50,owned:false},
+  {id:'autumn',name:'Herbst',icon:'🍂',bg:'#8a7040',ph:'#c4a86a',enc:'rgba(120,80,20,0.42)',pond:'#7a9ab4',price:80,owned:false},
+  {id:'winter',name:'Winter',icon:'❄️',bg:'#90aabf',ph:'#e8e8f0',enc:'rgba(150,175,200,0.42)',pond:'#b0d8f0',price:120,owned:false},
+];
+let curSeason=seasons[0];
+
+function applyTheme(s){
+  document.querySelectorAll('.ph,.pv').forEach(e=>e.style.background=s.ph);
+  document.querySelectorAll('.enc').forEach(e=>e.style.background=s.enc);
+  document.querySelectorAll('.pond').forEach(e=>e.style.background=s.pond);
+  curSeason=s;
+  applyCustomBg();
+  saveGame();
+}
+function applyCustomBg(){
+  zoo.style.background=BG_COLORS[customBg] || BG_COLORS.green;
+}
+function setCustomBg(name){
+  customBg=name;
+  applyCustomBg();
+  showToast('Hintergrund: '+name.toUpperCase());
+  saveGame();
+}
+function openShop(){
+  closeBook();
+  closePause();
+  renderGrid();
+  renderShopPts();
+  document.getElementById('shopov').classList.add('open');
+}
+function closeShop(){document.getElementById('shopov').classList.remove('open')}
+function renderGrid(){
+  const g=document.getElementById('sgrid');
+  g.innerHTML='';
+  seasons.forEach(s=>{
+    const c=document.createElement('div');
+    c.className='scard'+(s.owned?' owned':'')+(s.id===curSeason.id?' cur':'');
+    c.innerHTML=`<span class="sico">${s.icon}</span><div class="sname">${s.name}</div>`;
+    if(s.id===curSeason.id){
+      c.innerHTML+=`<div class="sprice" style="color:#e07a20">Aktiv ✓</div>`;
+    }else if(s.owned){
+      const b=document.createElement('button');
+      b.className='sbtn';
+      b.textContent='Aktivieren';
+      b.onclick=()=>{applyTheme(s);renderGrid();};
+      c.appendChild(b);
+    }else{
+      c.innerHTML+=`<div class="sprice">${s.price} ⭐</div>`;
+      const b=document.createElement('button');
+      b.className='sbtn';
+      b.textContent='Kaufen';
+      if(pts<s.price)b.disabled=true;
+      b.onclick=()=>{
+        if(pts>=s.price){
+          pts-=s.price;
+          ptsEl.textContent=pts;
+          s.owned=true;
+          sfx.coin();
+          applyTheme(s);
+          renderGrid();
+          renderShopPts();
+          saveGame();
+        }
+      };
+      c.appendChild(b);
+    }
+    g.appendChild(c);
+  });
+}
+
+function openPause(){
+  closeBook();
+  closeShop();
+  isPaused=true;
+  stopMusicLoop();
+  document.getElementById('pauseov').classList.add('open');
+}
+function closePause(){
+  document.getElementById('pauseov').classList.remove('open');
+}
+function resumeGame(){
+  isPaused=false;
+  closePause();
+  if(musicOn && document.getElementById('menuov').style.display==='none') startMusicLoop();
+}
+function goMainMenu(){
+  isPaused=false;
+  closePause();
+  stopMusicLoop();
+  document.getElementById('menuov').style.display='flex';
+}
+
+const EVO_DATA={
+  'Giraffe':[
+    {emoji:'🦒',name:'Junge Giraffe',min:1,scale:1.0,power:1,desc:'Noch klein, neugierig und elegant.'},
+    {emoji:'🦒✨',name:'Wüsten-Giraffe',min:3,scale:1.25,power:2,desc:'Größer, glänzender Hals und mehr Ausdauer.'},
+    {emoji:'🦒👑',name:'Titan-Giraffe',min:6,scale:1.55,power:4,desc:'Eine legendäre Form mit königlicher Stärke.'}
+  ],
+  'Elefant':[
+    {emoji:'🐘',name:'Junger Elefant',min:1,scale:1.0,power:1,desc:'Ruhig, stark und freundlich.'},
+    {emoji:'🐘💪',name:'Kampf-Elefant',min:3,scale:1.28,power:2,desc:'Mehr Masse, mehr Muskeln und härter.'},
+    {emoji:'🐘⚡',name:'Donner-Elefant',min:6,scale:1.6,power:4,desc:'Eine gewaltige Evolutionsform mit Urkraft.'}
+  ],
+  'Gorilla':[
+    {emoji:'🦍',name:'Junger Gorilla',min:1,scale:1.0,power:1,desc:'Stark, aber noch im Training.'},
+    {emoji:'🦍💪',name:'Alpha-Gorilla',min:3,scale:1.3,power:2,desc:'Dominant, muskulös und mutig.'},
+    {emoji:'🦍🔥',name:'Titan-Gorilla',min:6,scale:1.65,power:4,desc:'Pure Kraft und absolute Kontrolle.'}
+  ],
+  'Erdmänn.':[
+    {emoji:'🐾',name:'Mini Erdmännchen',min:1,scale:1.0,power:1,desc:'Klein, flink und aufmerksam.'},
+    {emoji:'🐾✨',name:'Wächter-Erdmännchen',min:3,scale:1.22,power:2,desc:'Schärfere Sinne und bessere Haltung.'},
+    {emoji:'🐾👑',name:'Königs-Erdmännchen',min:6,scale:1.45,power:4,desc:'Der stolze Wächter der Steppe.'}
+  ],
+  'Flusspferd':[
+    {emoji:'🦛',name:'Junges Flusspferd',min:1,scale:1.0,power:1,desc:'Groß, aber noch gemütlich.'},
+    {emoji:'🦛💪',name:'Panzer-Flusspferd',min:3,scale:1.28,power:2,desc:'Zäher Körper und mehr Präsenz.'},
+    {emoji:'🦛🌊',name:'Leviathan-Flusspferd',min:6,scale:1.58,power:4,desc:'Gigantische Wasserbestie mit Macht.'}
+  ],
+  'Papagei':[
+    {emoji:'🦜',name:'Junger Papagei',min:1,scale:1.0,power:1,desc:'Bunt, leicht und verspielt.'},
+    {emoji:'🦜✨',name:'Regenbogen-Papagei',min:3,scale:1.2,power:2,desc:'Schillernde Farben und stolzes Gefieder.'},
+    {emoji:'🦜⚡',name:'Phönix-Papagei',min:6,scale:1.45,power:4,desc:'Eine magische Flugform voller Energie.'}
+  ],
+  'Leopard':[
+    {emoji:'🐆',name:'Junger Leopard',min:1,scale:1.0,power:1,desc:'Leise, schnell und wachsam.'},
+    {emoji:'🐆💨',name:'Schatten-Leopard',min:3,scale:1.25,power:2,desc:'Noch schneller und fast unsichtbar.'},
+    {emoji:'🐆🔥',name:'Phantom-Leopard',min:6,scale:1.5,power:4,desc:'Legendärer Jäger mit dunkler Aura.'}
+  ],
+  'Krokodil':[
+    {emoji:'🐊',name:'Junges Krokodil',min:1,scale:1.0,power:1,desc:'Ruhig im Wasser, gefährlich im Angriff.'},
+    {emoji:'🐊🛡️',name:'Panzer-Krokodil',min:3,scale:1.28,power:2,desc:'Massiver Körper und starke Schuppen.'},
+    {emoji:'🐊🌋',name:'Urzeit-Krokodil',min:6,scale:1.58,power:4,desc:'Eine uralte Evolutionsstufe mit Wucht.'}
+  ],
+  'Zebra':[
+    {emoji:'🦓',name:'Junges Zebra',min:1,scale:1.0,power:1,desc:'Elegant und schnell unterwegs.'},
+    {emoji:'🦓✨',name:'Royal-Zebra',min:3,scale:1.2,power:2,desc:'Edlere Muster und mehr Tempo.'},
+    {emoji:'🦓⚡',name:'Blitz-Zebra',min:6,scale:1.45,power:4,desc:'Eine schnelle Lichtform mit Energie.'}
+  ],
+  'Wolf':[
+    {emoji:'🐺',name:'Junger Wolf',min:1,scale:1.0,power:1,desc:'Lernt das Rudel und seine Instinkte.'},
+    {emoji:'🐺🌙',name:'Mond-Wolf',min:3,scale:1.25,power:2,desc:'Stärker bei Nacht und klüger im Jagdtrieb.'},
+    {emoji:'🐺👑',name:'Alpha-Schattenwolf',min:6,scale:1.55,power:4,desc:'Herrscher des Rudels mit dunkler Macht.'}
+  ],
+  'Löwe':[
+    {emoji:'🦁',name:'Junger Löwe',min:1,scale:1.0,power:1,desc:'Mutig, aber noch nicht vollständig erwacht.'},
+    {emoji:'🦁💪',name:'Königslöwe',min:3,scale:1.28,power:2,desc:'Mehr Kraft, mehr Stolz, mehr Mut.'},
+    {emoji:'🦁🔥',name:'Sonnenlöwe',min:6,scale:1.58,power:4,desc:'Strahlende Endform mit königlicher Gewalt.'}
+  ],
+  'Bär':[
+    {emoji:'🐻',name:'Junger Bär',min:1,scale:1.0,power:1,desc:'Kräftig und robust im Aufbau.'},
+    {emoji:'🐻💪',name:'Berg-Bär',min:3,scale:1.28,power:2,desc:'Breiter, schwerer und stärker.'},
+    {emoji:'🐻❄️',name:'Titan-Bär',min:6,scale:1.6,power:4,desc:'Eine urgewaltige Form mit gewaltiger Masse.'}
+  ]
+};
+
+function getEvoStages(name){
+  return EVO_DATA[name] || [{emoji:'🐾',name:'Tier',min:1,scale:1,power:1,desc:'Unbekannt.'}];
+}
+function getCurrentEvolution(a){
+  const list=getEvoStages(a.name);
+  let current=list[0];
+  for(const stage of list) if(a.level>=stage.min) current=stage;
+  return current;
+}
+function refreshAnimalLook(a){
+  const evo=getCurrentEvolution(a);
+  a.label.textContent=evo.emoji;
+  a.el.style.transform=`scale(${evo.scale})`;
+  a.power=evo.power;
+  a.badge.textContent=`Lv ${a.level} • ${evo.name}`;
+}
+function evolveAnimal(a){
+  const list=getEvoStages(a.name);
+  let idx=0;
+  for(let i=0;i<list.length;i++) if(a.level>=list[i].min) idx=i;
+  if(idx>a.evoStage){
+    a.evoStage=idx;
+    refreshAnimalLook(a);
+
+    const fx=document.createElement('div');
+    fx.textContent='✨ EVOLUTION! ✨';
+    Object.assign(fx.style,{
+      position:'absolute',
+      left:'-20px',
+      top:'-25px',
+      color:'#ffe066',
+      fontWeight:'700',
+      fontSize:'12px',
+      pointerEvents:'none',
+      textShadow:'0 1px 5px #000',
+      transition:'transform 0.9s, opacity 0.9s'
+    });
+    a.el.appendChild(fx);
+    requestAnimationFrame(()=>{
+      fx.style.transform='translateY(-28px)';
+      fx.style.opacity='0';
+    });
+    setTimeout(()=>fx.remove(),900);
+    floatMsg(a.el,'EVOLUTION!');
+  }
+}
+function gainXP(a,amount){
+  a.xp+=amount;
+  let need=10+(a.level*4);
+  let changed=false;
+  while(a.xp>=need){
+    a.xp-=need;
+    a.level++;
+    changed=true;
+    refreshAnimalLook(a);
+    evolveAnimal(a);
+    sfx.level();
+
+    const muscle=document.createElement('div');
+    muscle.textContent='💪';
+    Object.assign(muscle.style,{
+      position:'absolute',
+      left:'-8px',
+      top:'-10px',
+      fontSize:'20px',
+      pointerEvents:'none',
+      transition:'transform 0.8s, opacity 0.8s'
+    });
+    a.el.appendChild(muscle);
+    requestAnimationFrame(()=>{
+      muscle.style.transform='translateY(-18px) scale(1.3)';
+      muscle.style.opacity='0';
+    });
+    setTimeout(()=>muscle.remove(),850);
+    floatMsg(a.el,'LEVEL '+a.level+'!');
+    need=10+(a.level*4);
+  }
+  if(changed) saveGame();
+}
+
+const bookAnimals=Object.keys(EVO_DATA);
+let bookIndex=0;
+
+function openBook(){
+  closeShop();
+  closePause();
+  renderBookSpread();
+  document.getElementById('bookov').classList.add('open');
+}
+function openBookFromMenu(){
+  document.getElementById('menuov').style.display='none';
+  openBook();
+  if(musicOn) startMusicLoop();
+}
+function closeBook(){document.getElementById('bookov').classList.remove('open')}
+function nextBookPage(){
+  if(bookIndex<bookAnimals.length-2){
+    bookIndex+=2;
+    renderBookSpread();
+    saveGame();
+  }
+}
+function prevBookPage(){
+  if(bookIndex>0){
+    bookIndex-=2;
+    renderBookSpread();
+    saveGame();
+  }
+}
+function highestLevelForType(name){
+  const same=animals.filter(a=>a.name===name);
+  if(!same.length)return 1;
+  return Math.max(...same.map(a=>a.level));
+}
+function renderAnimalPage(name,pageNumber){
+  const stages=getEvoStages(name);
+  const best=highestLevelForType(name);
+  const lastUnlocked=[...stages].reverse().find(s=>best>=s.min) || stages[0];
+  return `
+    <div class="book-animal-big">${lastUnlocked.emoji}</div>
+    <div class="book-animal-name">${name}</div>
+    <div class="book-desc">
+      Höchste freigeschaltete Form: <b>${lastUnlocked.name}</b><br>
+      Aktuelles Best-Level im Zoo: <b>${best}</b>
+    </div>
+    <div class="evo-list">
+      ${stages.map(stage=>`
+        <div class="evo-card">
+          <div class="evo-icon">${stage.emoji}</div>
+          <div>
+            <div class="evo-name">${stage.name}</div>
+            <div class="evo-meta">Ab Level ${stage.min} • Power ${stage.power}</div>
+            <div class="evo-text">${stage.desc}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="page-num">Seite ${pageNumber}</div>
+  `;
+}
+function renderEmptyPage(pageNumber){
+  return `
+    <div class="book-animal-big">📜</div>
+    <div class="book-animal-name">Letzte Seite</div>
+    <div class="book-desc">Hier endet das Evolutionsbuch.</div>
+    <div class="page-num">Seite ${pageNumber}</div>
+  `;
+}
+function renderBookSpread(){
+  const left=document.getElementById('bookLeft');
+  const right=document.getElementById('bookRight');
+
+  const leftName=bookAnimals[bookIndex];
+  const rightName=bookAnimals[bookIndex+1];
+
+  left.innerHTML=leftName ? renderAnimalPage(leftName,bookIndex+1) : renderEmptyPage(bookIndex+1);
+  right.innerHTML=rightName ? renderAnimalPage(rightName,bookIndex+2) : renderEmptyPage(bookIndex+2);
+
+  document.getElementById('bookPrev').disabled=bookIndex===0;
+  document.getElementById('bookNext').disabled=bookIndex>=bookAnimals.length-2;
+}
+
+const W=760,H=1100;
+[[0,210,W,22],[0,560,W,22],[0,900,W,22]].forEach(([l,t,w,h])=>{
+  const d=document.createElement('div');
+  d.className='ph';
+  Object.assign(d.style,{position:'absolute',left:l+'px',top:t+'px',width:w+'px',height:h+'px',background:'#c8b98a',borderRadius:'4px',zIndex:'1'});
+  zoomap.appendChild(d);
+});
+[[180,0,22,H],[400,0,22,H],[620,0,22,H]].forEach(([l,t,w,h])=>{
+  const d=document.createElement('div');
+  d.className='pv';
+  Object.assign(d.style,{position:'absolute',left:l+'px',top:t+'px',width:w+'px',height:h+'px',background:'#c8b98a',borderRadius:'4px',zIndex:'1'});
+  zoomap.appendChild(d);
+});
+[[430,590,130,80],[70,590,95,60]].forEach(([l,t,w,h])=>{
+  const d=document.createElement('div');
+  d.className='pond';
+  Object.assign(d.style,{position:'absolute',left:l+'px',top:t+'px',width:w+'px',height:h+'px',background:'#6ab4e8',borderRadius:'50%',border:'3px solid #3a7baa',zIndex:'2'});
+  zoomap.appendChild(d);
+});
+[
+ ['🦒 Giraffen',10,10,160,190],['🐘 Elefanten',210,10,180,190],['🦍 Gorillas',430,10,175,190],
+ ['🐾 Erdmännchen',10,240,160,300],['🦛 Flusspferde',210,240,175,300],['🦜 Vögel',430,240,290,300],
+ ['🐆 Leoparden',10,590,160,290],['🐊 Krokodile',650,20,95,180],['🦓 Zebras',210,590,175,290],
+ ['🐺 Wölfe',10,930,160,150],['🦁 Löwen',210,930,175,150],['🐻 Bären',430,930,290,150],
+].forEach(([label,l,t,w,h])=>{
+  const d=document.createElement('div');
+  d.className='enc';
+  Object.assign(d.style,{position:'absolute',left:l+'px',top:t+'px',width:w+'px',height:h+'px',background:'rgba(80,150,60,0.38)',zIndex:'2'});
+  const lbl=document.createElement('div');
+  lbl.className='enc-lbl';
+  lbl.textContent=label;
+  d.appendChild(lbl);
+  zoomap.appendChild(d);
+});
+[[655,220],[685,430],[685,770],[690,920],[5,210],[5,580],[5,930],[370,10],[370,220],[370,570]].forEach(([l,t])=>{
+  const d=document.createElement('div');
+  d.className='tree';
+  d.style.left=l+'px';
+  d.style.top=t+'px';
+  d.textContent=['🌳','🌲','🌴'][Math.floor(Math.random()*3)];
+  zoomap.appendChild(d);
+});
+
+const animalDefs=[
+  ['🦒','Giraffe',35,70],['🦒','Giraffe',95,120],
+  ['🐘','Elefant',235,70],['🐘','Elefant',310,125],
+  ['🦍','Gorilla',450,70],['🦍','Gorilla',510,120],
+  ['🐾','Erdmänn.',35,295],['🐾','Erdmänn.',80,350],['🐾','Erdmänn.',55,405],
+  ['🦛','Flusspferd',235,305],['🦛','Flusspferd',300,360],
+  ['🦜','Papagei',455,300],['🦜','Papagei',530,350],
+  ['🐆','Leopard',35,645],['🐆','Leopard',95,705],
+  ['🐊','Krokodil',660,95],['🐊','Krokodil',665,150],
+  ['🦓','Zebra',235,645],['🦓','Zebra',295,710],
+  ['🐺','Wolf',35,972],['🐺','Wolf',95,1005],
+  ['🦁','Löwe',235,972],['🦁','Löwe',300,1005],
+  ['🐻','Bär',455,972],['🐻','Bär',525,1005],
+];
+const animals=[];
+
+animalDefs.forEach(([e,n,l,t],idx)=>{
+  const el=document.createElement('div');
+  el.className='animal';
+  el.style.cssText=`left:${l}px;top:${t}px;`;
+
+  const label=document.createElement('span');
+  label.className='animal-main';
+  label.textContent=e;
+  el.appendChild(label);
+
+  const badge=document.createElement('div');
+  badge.className='animal-badge';
+  el.appendChild(badge);
+
+  const bw=document.createElement('div');
+  bw.className='hbw';
+  const bar=document.createElement('div');
+  bar.className='hb';
+  bar.style.width='80%';
+  bw.appendChild(bar);
+  el.appendChild(bw);
+
+  const a={
+    id:'a'+idx,
+    el,
+    label,
+    bar,
+    badge,
+    hunger:76+Math.random()*20,
+    name:n,
+    level:1,
+    xp:0,
+    evoStage:0,
+    power:1
+  };
+
+  animals.push(a);
+  refreshAnimalLook(a);
+  updateBar(a);
+
+  el.addEventListener('click',()=>doAnimal(a,el));
+  zoomap.appendChild(el);
+});
+
+function updateBar(a){
+  const v=Math.max(0,Math.min(100,Math.round(a.hunger)));
+  a.bar.style.width=v+'%';
+  a.bar.style.background=v>55?'#2db52d':v>25?'#f0a020':'#e03030';
+}
+function elPos(el){
+  return{x:parseInt(el.style.left)||0,y:parseInt(el.style.top)||0};
+}
+function flashRing(el){
+  const p=elPos(el);
+  const f=document.createElement('div');
+  f.className='fring';
+  Object.assign(f.style,{position:'absolute',left:(p.x+12)+'px',top:(p.y+12)+'px'});
+  zoomap.appendChild(f);
+  setTimeout(()=>f.remove(),560);
+}
+function floatMsg(el,txt){
+  const p=elPos(el);
+  const m=document.createElement('div');
+  m.className='fmsg';
+  Object.assign(m.style,{left:(p.x+4)+'px',top:(p.y-4)+'px'});
+  m.textContent=txt;
+  zoomap.appendChild(m);
+  requestAnimationFrame(()=>{
+    m.style.top=(p.y-34)+'px';
+    m.style.opacity='0';
+  });
+  setTimeout(()=>m.remove(),950);
+}
+function spawnPhoto(originEl){
+  let ox=350,oy=300;
+  if(originEl){
+    const p=elPos(originEl);
+    ox=p.x+15;
+    oy=p.y+15;
+  }
+  const subs=['🦒','🐘','🦍','🐾','🦛','🦜','🐆','🐊','🦓','🐺','🦁','🐻'];
+  const ph=document.createElement('div');
+  ph.className='photo-pop';
+  ph.textContent=subs[Math.floor(Math.random()*subs.length)];
+  const sw=82+Math.random()*36,sh=sw*0.76,rot=(Math.random()-0.5)*28;
+  Object.assign(ph.style,{
+    position:'absolute',
+    left:ox+'px',
+    top:oy+'px',
+    width:sw+'px',
+    height:sh+'px',
+    marginLeft:(-sw/2)+'px',
+    marginTop:(-sh/2)+'px',
+    opacity:'0',
+    transform:`scale(0.25) rotate(${rot}deg)`,
+    transition:'none'
+  });
+  zoomap.appendChild(ph);
+  requestAnimationFrame(()=>{
+    ph.style.transition='transform 0.22s ease-out,opacity 0.2s';
+    ph.style.opacity='1';
+    ph.style.transform=`scale(1) rotate(${rot}deg)`;
+    setTimeout(()=>{
+      ph.style.transition='transform 0.46s cubic-bezier(0.4,0,0.6,1),opacity 0.46s,top 0.46s ease-in';
+      ph.style.transform=`scale(0.3) rotate(${rot*2}deg)`;
+      ph.style.top=(oy+180)+'px';
+      ph.style.opacity='0';
+      setTimeout(()=>ph.remove(),500);
+    },600);
+  });
+}
+const toys=['🎾','⚽','🎈','🏀','🪀'];
+
+function useItem(key){
+  if(inventory[key]!==Infinity){
+    if(inventory[key]<=0){
+      showToast('Keine '+key+' mehr!');
+      return false;
+    }
+    inventory[key]--;
+    const el=document.getElementById('cnt-'+key);
+    if(el)el.textContent=inventory[key];
+  }
+  return true;
+}
+
+function doAnimal(a,el){
+  if(isPaused)return;
+  if(mode==='walk')return;
+  if(!useItem(mode))return;
+
+  flashRing(el);
+
+  if(mode==='feed'){
+    sfx.feed();
+    a.hunger=Math.min(100,a.hunger+22);
+    updateBar(a);
+    addPts(5);
+    gainXP(a,3);
+    floatMsg(el,'🍎 +5');
+  }
+  else if(mode==='med'){
+    sfx.med();
+    addPts(5);
+    gainXP(a,2);
+    floatMsg(el,'💊 +5');
+
+    const p=elPos(el);
+    const pill=document.createElement('div');
+    Object.assign(pill.style,{
+      position:'absolute',
+      fontSize:'18px',
+      pointerEvents:'none',
+      zIndex:'96',
+      left:(p.x+4)+'px',
+      top:p.y+'px',
+      transition:'top 0.65s,opacity 0.65s'
+    });
+    pill.textContent='💊';
+    zoomap.appendChild(pill);
+    requestAnimationFrame(()=>{
+      pill.style.top=(p.y-32)+'px';
+      pill.style.opacity='0';
+    });
+    setTimeout(()=>pill.remove(),700);
+  }
+  else if(mode==='play'){
+    sfx.play();
+    addPts(5);
+    gainXP(a,4);
+    floatMsg(el,'🎾 +5');
+
+    const p=elPos(el);
+    const toy=document.createElement('div');
+    Object.assign(toy.style,{
+      position:'absolute',
+      fontSize:'20px',
+      pointerEvents:'none',
+      zIndex:'96',
+      left:(p.x+10)+'px',
+      top:p.y+'px',
+      transition:'top 0.55s cubic-bezier(0.2,0.8,0.4,1),left 0.55s,opacity 0.6s'
+    });
+    toy.textContent=toys[Math.floor(Math.random()*toys.length)];
+    zoomap.appendChild(toy);
+    requestAnimationFrame(()=>{
+      toy.style.top=(p.y-44)+'px';
+      toy.style.left=(p.x+32)+'px';
+    });
+    setTimeout(()=>{toy.style.opacity='0';},380);
+    setTimeout(()=>toy.remove(),680);
+
+    const evo=getCurrentEvolution(a);
+    el.style.transform=`scale(${evo.scale+0.12}) rotate(10deg)`;
+    setTimeout(()=>{el.style.transform=`scale(${evo.scale}) rotate(0deg)`;},280);
+  }
+  else if(mode==='groom'){
+    sfx.groom();
+    addPts(5);
+    gainXP(a,3);
+    floatMsg(el,'✨ +5');
+  }
+  else if(mode==='photo'){
+    sfx.camera();
+    spawnPhoto(el);
+    addPts(5);
+    gainXP(a,2);
+    floatMsg(el,'📸 +5');
+  }
+  saveGame();
+}
+
+[[170,205],[395,205],[395,555],[170,555],[600,555],[170,895],[395,895]].forEach(cs=>{
+  const el=document.createElement('div');
+  el.className='camst';
+  Object.assign(el.style,{position:'absolute',left:cs[0]+'px',top:cs[1]+'px'});
+  el.textContent='📷';
+  el.addEventListener('click',()=>{
+    if(isPaused)return;
+    sfx.camera();
+    spawnPhoto(el);
+    addPts(5);
+    floatMsg(el,'🎞️ +5');
+  });
+  zoomap.appendChild(el);
+});
+
+const vcols=[
+  {h:'#f9d4aa',b:'#e05a5a'},{h:'#f9d4aa',b:'#4a80c4'},{h:'#c87a40',b:'#6a9e3a'},
+  {h:'#f9d4aa',b:'#9b59b6'},{h:'#c87a40',b:'#e07a20'},{h:'#f0c090',b:'#2ecc71'},
+  {h:'#f9d4aa',b:'#e91e63'},{h:'#deb887',b:'#00bcd4'}
+];
+const hY=[215,565,905],vX=[190,410,630];
+
+function makeVisitor(){
+  const col=vcols[Math.floor(Math.random()*vcols.length)];
+  const w=document.createElement('div');
+  w.className='visitor';
+  const sh=Math.random()<0.5;
+  w.style.left=(sh?'-22':vX[Math.floor(Math.random()*vX.length)])+'px';
+  w.style.top=(sh?hY[Math.floor(Math.random()*hY.length)]:'-22')+'px';
+
+  const hd=document.createElement('div');
+  hd.className='vhead';
+  hd.style.background=col.h;
+  const bd=document.createElement('div');
+  bd.className='vbody';
+  bd.style.background=col.b;
+  const sp=document.createElement('div');
+  sp.className='bubble';
+  sp.textContent=Math.random()<0.45?'📷':(Math.random()<0.5?'😍':'🎉');
+  w.appendChild(hd);w.appendChild(bd);w.appendChild(sp);
+  zoomap.appendChild(w);
+
+  const wps=[];
+  for(let i=0;i<4+Math.floor(Math.random()*4);i++){
+    if(Math.random()<0.5)wps.push({x:Math.random()*W,y:hY[Math.floor(Math.random()*hY.length)]});
+    else wps.push({x:vX[Math.floor(Math.random()*vX.length)],y:Math.random()*H});
+  }
+  const last=wps[wps.length-1]||{x:0,y:0};
+  wps.push({x:last.x>W/2?W+30:-30,y:last.y});
+
+  let wi=0;
+  function step(){
+    if(wi>=wps.length){
+      setTimeout(()=>w.remove(),400);
+      return;
+    }
+    const wp=wps[wi++];
+    w.style.left=wp.x+'px';
+    w.style.top=wp.y+'px';
+    setTimeout(step,950+Math.random()*700);
+  }
+  setTimeout(step,100);
+}
+
+setInterval(()=>{ if(!isPaused) makeVisitor(); },1900);
+makeVisitor();makeVisitor();makeVisitor();makeVisitor();
+
+setInterval(()=>{
+  if(isPaused)return;
+  animals.forEach(a=>{
+    a.hunger=Math.max(0,a.hunger-0.35);
+    updateBar(a);
+  });
+  saveGame();
+},3000);
+
+function saveGame(){
+  const data={
+    pts,
+    seasonId:curSeason.id,
+    customBg,
+    bookIndex,
+    musicOn,
+    animals:animals.map(a=>({
+      id:a.id,
+      hunger:a.hunger,
+      level:a.level,
+      xp:a.xp,
+      evoStage:a.evoStage
+    })),
+    seasons:seasons.map(s=>({id:s.id,owned:s.owned}))
+  };
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify(data));
+  }catch(e){}
+}
+
+function loadGame(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw)return;
+    const data=JSON.parse(raw);
+
+    if(typeof data.pts==='number') pts=data.pts;
+    ptsEl.textContent=pts;
+
+    if(typeof data.customBg==='string') customBg=data.customBg;
+    if(typeof data.musicOn==='boolean') musicOn=data.musicOn;
+
+    if(Array.isArray(data.seasons)){
+      data.seasons.forEach(saved=>{
+        const found=seasons.find(s=>s.id===saved.id);
+        if(found && typeof saved.owned==='boolean') found.owned=saved.owned;
+      });
+    }
+
+    if(data.seasonId){
+      const season=seasons.find(s=>s.id===data.seasonId);
+      if(season) curSeason=season;
+    }
+
+    if(typeof data.bookIndex==='number') bookIndex=Math.max(0,data.bookIndex);
+
+    if(Array.isArray(data.animals)){
+      data.animals.forEach(saved=>{
+        const found=animals.find(a=>a.id===saved.id);
+        if(found){
+          if(typeof saved.hunger==='number') found.hunger=saved.hunger;
+          if(typeof saved.level==='number') found.level=saved.level;
+          if(typeof saved.xp==='number') found.xp=saved.xp;
+          if(typeof saved.evoStage==='number') found.evoStage=saved.evoStage;
+          refreshAnimalLook(found);
+          updateBar(found);
+        }
+      });
+    }
+  }catch(e){}
+}
+
+function resetSave(){
+  localStorage.removeItem(SAVE_KEY);
+  location.reload();
+}
+
+function startGame(){
+  ensureAudio();
+  document.getElementById('menuov').style.display='none';
+  renderBookSpread();
+  if(musicOn) startMusicLoop();
+}
+
+/* ════════════════════════════════════
+   MULTIPLAYER SYSTEM
+═══════════════════════════════════ */
+let mpState={connected:false,isHost:false,roomCode:'',players:[]};
+
+const FAKE_PLAYERS=[
+  {name:'LunaZoo',avatar:'🦊',status:'Online – Zoo Level 12',isMaster:false},
+  {name:'BenWild',avatar:'🐯',status:'Online – Zoo Level 8',isMaster:false},
+  {name:'ZooMeister_X',avatar:'👑',status:'Meister – Unbesiegbar',isMaster:true},
+  {name:'Mia_Garten',avatar:'🌸',status:'Online – Zoo Level 5',isMaster:false},
+  {name:'TigerKlaus',avatar:'🐅',status:'Online – Zoo Level 19',isMaster:false},
+];
+
+function genCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let c='';for(let i=0;i<4;i++) c+=chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+
+function openMulti(){
+  document.getElementById('mp-join-section').style.display='block';
+  document.getElementById('mp-lobby-section').classList.remove('show');
+  document.getElementById('multiov').classList.add('open');
+}
+function closeMulti(){
+  document.getElementById('multiov').classList.remove('open');
+}
+
+function hostGame(){
+  const code=genCode();
+  mpState.roomCode=code;
+  mpState.isHost=true;
+  document.getElementById('mp-room-code').textContent=code;
+  document.getElementById('mp-lobby-title').textContent='Spieler in der Lobby (1/6)';
+  document.getElementById('mp-join-section').style.display='none';
+  document.getElementById('mp-lobby-section').classList.add('show');
+  renderLobbyPlayers([{name:'Du',avatar:'🦁',status:'Bereit ✓',isYou:true}]);
+  // simulate players joining
+  let joined=1;
+  const timer=setInterval(()=>{
+    if(joined>=3){clearInterval(timer);return;}
+    const p=FAKE_PLAYERS[Math.floor(Math.random()*FAKE_PLAYERS.length)];
+    joined++;
+    document.getElementById('mp-lobby-title').textContent=`Spieler in der Lobby (${joined}/6)`;
+    const existing=document.getElementById('mp-player-list');
+    const row=buildPlayerRow(p,false);
+    existing.appendChild(row);
+  },1400);
+}
+
+function joinGame(){
+  const code=document.getElementById('mp-join-input').value.trim();
+  if(code.length<4){showMpError('Bitte 4-stelligen Code eingeben!');return;}
+  mpState.roomCode=code;
+  mpState.isHost=false;
+  document.getElementById('mp-room-code').textContent=code;
+  document.getElementById('mp-lobby-title').textContent='Lobby beigetreten!';
+  document.getElementById('mp-join-section').style.display='none';
+  document.getElementById('mp-lobby-section').classList.add('show');
+  document.getElementById('mp-start-btn').style.display='none';
+  const host={name:'Host_Spieler',avatar:'🌟',status:'Host – Wartet...',isYou:false};
+  const you={name:'Du',avatar:'🦁',status:'Verbunden ✓',isYou:true};
+  renderLobbyPlayers([host,you]);
+}
+
+function showMpError(msg){
+  const inp=document.getElementById('mp-join-input');
+  inp.style.borderColor='#ff4a4a';
+  inp.placeholder=msg;
+  setTimeout(()=>{inp.style.borderColor='#2a5a30';inp.placeholder='CODE';},2000);
+}
+
+function renderLobbyPlayers(players){
+  const list=document.getElementById('mp-player-list');
+  list.innerHTML='';
+  players.forEach(p=>list.appendChild(buildPlayerRow(p,p.isYou)));
+}
+
+function buildPlayerRow(p,isYou){
+  const row=document.createElement('div');
+  row.className='player-row';
+  const colors=['#1a3a2a','#2a1a3a','#3a2a1a','#1a2a3a','#2a3a1a'];
+  const bg=colors[Math.floor(Math.random()*colors.length)];
+  row.innerHTML=`
+    <div class="player-avatar" style="background:${bg};">${p.avatar||'🎮'}</div>
+    <div class="player-info">
+      <div class="player-name">${p.name}${isYou?' <span style="color:#f0d050;font-size:10px;">(Du)</span>':''}</div>
+      <div class="player-status">${p.status||'Online'}</div>
+    </div>
+    ${!isYou?`<button class="player-action" onclick="closeMulti();setTimeout(()=>travelTo('${p.name}','${p.avatar||'🎮'}',${p.isMaster||false}),300)">✈️ Besuchen</button>`:''}
+  `;
+  return row;
+}
+
+function leaveLobby(){
+  mpState={connected:false,isHost:false,roomCode:'',players:[]};
+  document.getElementById('mp-lobby-section').classList.remove('show');
+  document.getElementById('mp-join-section').style.display='block';
+  document.getElementById('mp-start-btn').style.display='block';
+  document.getElementById('mp-join-input').value='';
+  closeMulti();
+}
+
+function startMultiGame(){
+  mpState.connected=true;
+  closeMulti();
+  startGame();
+  document.getElementById('multibtn-ingame').classList.add('connected');
+  showToast('🌐 Multiplayer aktiv!');
+  setTimeout(()=>openTravel(),600);
+}
+
+/* ════ TRAVEL SYSTEM ════ */
+const TRAVEL_TARGETS=[
+  {name:'ZooMeister_X',avatar:'👑',detail:'Meister-Zoo • Level 99 • Alle Tiere maximal',badge:'master',color:'#2a1800'},
+  {name:'LunaZoo',avatar:'🦊',detail:'Freundin • Level 12 • Frühlings-Karte aktiv',badge:'friend',color:'#0a2a18'},
+  {name:'BenWild',avatar:'🐯',detail:'Freund • Level 8 • Sommer-Karte aktiv',badge:'friend',color:'#0a2a18'},
+  {name:'Mia_Garten',avatar:'🌸',detail:'Freundin • Level 5 • Winter-Karte aktiv',badge:'friend',color:'#0a2a18'},
+  {name:'TigerKlaus',avatar:'🐅',detail:'Freund • Level 19 • Herbst-Karte aktiv',badge:'friend',color:'#0a2a18'},
+];
+
+function openTravel(){
+  const list=document.getElementById('tv-list');
+  list.innerHTML='';
+  TRAVEL_TARGETS.forEach(t=>{
+    const card=document.createElement('div');
+    card.className='tv-card';
+    card.innerHTML=`
+      <div class="tv-avatar" style="background:${t.color};">${t.avatar}</div>
+      <div class="tv-info">
+        <div class="tv-name">${t.name}</div>
+        <div class="tv-detail">${t.detail}</div>
+      </div>
+      <span class="tv-badge ${t.badge}">${t.badge==='master'?'👑 Meister':'👥 Freund'}</span>
+      <button class="tv-go" onclick="travelTo('${t.name}','${t.avatar}',${t.badge==='master'})">✈️ Reisen</button>
+    `;
+    list.appendChild(card);
+  });
+  document.getElementById('travelov').classList.add('open');
+}
+function closeTravel(){
+  document.getElementById('travelov').classList.remove('open');
+}
+
+function travelTo(name,avatar,isMaster){
+  closeTravel();
+  const flash=document.getElementById('travel-flash');
+  flash.style.opacity='1';
+  setTimeout(()=>{
+    flash.style.opacity='0';
+    if(isMaster){
+      showMasterZoo(name,avatar);
+    } else {
+      showFriendZoo(name,avatar);
+    }
+  },350);
+}
+
+function returnToMyZoo(panel){
+  const flash=document.getElementById('travel-flash');
+  flash.style.opacity='1';
+  setTimeout(()=>{
+    panel.remove();
+    flash.style.opacity='0';
+    showToast('🏠 Zurück in deinem Zoo!');
+  },320);
+}
+
+function showMasterZoo(name,avatar){
+  showToast(`🚀 Reise zu ${name}s Meister-Zoo!`);
+  const panel=document.createElement('div');
+  panel.id='visit-panel';
+  panel.style.cssText='position:absolute;inset:0;z-index:350;background:#0a0505;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:18px;overflow:hidden;';
+  panel.innerHTML=`
+    <div style="font-size:64px;margin-bottom:10px;">${avatar}</div>
+    <div style="font-size:22px;font-weight:900;color:#f0d050;margin-bottom:4px;">${name}'s Zoo</div>
+    <div style="font-size:13px;color:#ff6a6a;font-weight:700;margin-bottom:18px;">⚠️ MEISTER-ZOO — EXTREM STARK</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:22px;">
+      ${['🦒👑','🐘⚡','🦍🔥','🦁🔥','🐻💪'].map(e=>`<div style="font-size:38px;background:#1a0505;border:2px solid #f0d050;border-radius:10px;padding:8px 12px;">${e}</div>`).join('')}
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:6px;">Alle Tiere auf höchster Evolutionsstufe</div>
+    <div style="font-size:12px;color:#f0d050;font-weight:700;margin-bottom:28px;">Punkte: 99,999 ⭐ · Level MAX</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <button id="challenge-btn" style="background:#c0392b;color:#fff;border:none;border-radius:10px;padding:12px 22px;font-size:14px;font-weight:800;cursor:pointer;">⚔️ Herausforderung (+50 ⭐)</button>
+      <button id="back-master-btn" style="background:#1a1a1a;color:#ccc;border:2px solid #444;border-radius:10px;padding:12px 22px;font-size:14px;font-weight:800;cursor:pointer;">🏠 Mein Zoo</button>
+    </div>
+  `;
+  document.getElementById('wrap').appendChild(panel);
+  panel.querySelector('#challenge-btn').addEventListener('click',()=>{
+    showToast('⚔️ Challenge! +50 Bonus-Punkte');
+    addPts(50);
+  });
+  panel.querySelector('#back-master-btn').addEventListener('click',()=>returnToMyZoo(panel));
+}
+
+function showFriendZoo(name,avatar){
+  showToast(`✈️ Zu ${name}s Zoo gereist!`);
+  const animals=['🦒','🐘','🦍','🐾','🦛','🦜','🐆','🦓','🐺','🦁'];
+  const shuffled=[...animals].sort(()=>Math.random()-0.5).slice(0,6);
+  const panel=document.createElement('div');
+  panel.id='visit-panel';
+  panel.style.cssText='position:absolute;inset:0;z-index:350;background:#0a1a0e;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:18px;overflow:hidden;';
+  panel.innerHTML=`
+    <div style="font-size:48px;margin-bottom:8px;">${avatar}</div>
+    <div style="font-size:20px;font-weight:900;color:#9effa3;margin-bottom:4px;">${name}'s Zoo</div>
+    <div style="font-size:12px;color:#5a8a60;margin-bottom:18px;">Freundes-Zoo · Klicke auf Tiere um zu helfen!</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;" id="friend-animals">
+      ${shuffled.map(e=>`<div style="font-size:34px;background:#0a2a10;border:2px solid #2a6a30;border-radius:10px;padding:8px 10px;cursor:pointer;transition:0.2s;" data-helped="0">${e}</div>`).join('')}
+    </div>
+    <div style="font-size:12px;color:#5a8a60;margin-bottom:22px;">Jedes Tier einmal helfen = +5 ⭐</div>
+    <button id="back-friend-btn" style="background:#1a3a1e;color:#9effa3;border:2px solid #2a6a30;border-radius:10px;padding:12px 26px;font-size:14px;font-weight:800;cursor:pointer;">🏠 Zurück zu meinem Zoo</button>
+  `;
+  document.getElementById('wrap').appendChild(panel);
+  panel.querySelectorAll('#friend-animals div').forEach(tile=>{
+    tile.addEventListener('click',()=>{
+      if(tile.dataset.helped==='1') return;
+      tile.dataset.helped='1';
+      tile.style.borderColor='#f0d050';
+      tile.style.background='#1a3a10';
+      tile.innerHTML='✨';
+      addPts(5);
+    });
+  });
+  panel.querySelector('#back-friend-btn').addEventListener('click',()=>returnToMyZoo(panel));
+}
+function goToMenuOnLoad(){
+  document.getElementById('menuov').style.display='flex';
+}
+function resumeAudioOnFirstInteraction(){
+  ensureAudio();
+  window.removeEventListener('pointerdown',resumeAudioOnFirstInteraction);
+  window.removeEventListener('touchstart',resumeAudioOnFirstInteraction);
+}
+window.addEventListener('pointerdown',resumeAudioOnFirstInteraction);
+window.addEventListener('touchstart',resumeAudioOnFirstInteraction);
+
+applyTheme(seasons[0]);
+loadGame();
+applyTheme(curSeason);
+applyCustomBg();
+renderBookSpread();
+renderShopPts();
+ptsEl.textContent=pts;
+updateMusicButton();
+saveGame();
+goToMenuOnLoad();
+</script>
+</body>
+</html>

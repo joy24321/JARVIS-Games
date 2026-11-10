@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>FrischSaft Markt - Directed by Joy</title>
+<style>
+*{ box-sizing:border-box; margin:0; padding:0; font-family:sans-serif; user-select:none; touch-action:manipulation; }
+body{ background:#1a1a1a; display:flex; justify-content:center; height:100vh; overflow:hidden; }
+
+#wrap{ 
+  width:100vw; max-width:400px; height:100vh; background:#fff; 
+  display:flex; flex-direction:column; position:relative;
+}
+
+/* HAUPTMENÜ OVERLAY */
+#menu-overlay {
+  position:absolute; top:0; left:0; width:100%; height:100%; 
+  background:linear-gradient(135deg, #1b5e20 0%, #4caf50 100%);
+  z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white;
+  text-align:center;
+}
+#menu-overlay h1 { font-size:32px; margin-bottom:10px; text-shadow:2px 2px 4px rgba(0,0,0,0.3); }
+#menu-overlay p { font-style:italic; margin-bottom:30px; opacity:0.9; }
+
+.menu-btn { 
+  background:white; color:#1b5e20; border:none; padding:15px 40px; 
+  border-radius:30px; font-weight:bold; font-size:18px; cursor:pointer; 
+  box-shadow:0 4px 15px rgba(0,0,0,0.2); margin-bottom:15px; width:220px;
+}
+.reset-btn {
+  background:transparent; color:white; border:1px solid white; padding:8px 20px;
+  border-radius:20px; font-size:12px; cursor:pointer; opacity:0.8;
+}
+
+/* GAME UI */
+#topbar{ background:#1b5e20; color:#fff; padding:6px 12px; display:flex; justify-content:space-between; align-items:center; font-size:14px; }
+.pause-btn {
+  background: rgba(255,255,255,0.2); border: none; color: white;
+  font-size: 18px; width: 35px; height: 35px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+#wave-btn { background:#ff9800; border:none; color:#fff; padding:6px 12px; border-radius:15px; font-weight:bold; font-size:11px; }
+#wave-btn.active { background:#f44336; box-shadow:0 0 10px rgba(244,67,54,0.5); }
+
+#scene{ position:relative; width:100%; height:180px; background:#e8f5e9; border-bottom:3px solid #8d6e63; overflow:hidden; }
+.s-floor{ position:absolute; bottom:0; width:100%; height:30px; background:#bcaaa4; }
+
+.slot { 
+  position:absolute; bottom:30px; width:48px; height:80px; 
+  border:2px dashed #90a4ae; border-radius:5px; display:flex; 
+  align-items:center; justify-content:center; color:#90a4ae; font-size:20px;
+}
+.slot.highlight { border-color: #4caf50; background: rgba(76,175,80,0.2); animation: pulse 1s infinite; }
+
+.mach { 
+  position:absolute; bottom:35px; width:52px; height:110px; 
+  background:#333; border-radius:6px; border:2px solid #000;
+  display:flex; flex-direction:column; overflow:hidden; transition:transform 0.1s;
+}
+.mach.selected { outline: 3px solid #fff176; transform:scale(1.05); z-index:10; }
+.mach.highlight-potion { outline: 3px solid #2196f3; animation: pulse 1s infinite; }
+
+.liquid-tank { position:relative; width:100%; height:75px; background:rgba(255,255,255,0.1); }
+.liquid { position:absolute; bottom:0; width:100%; transition: height 0.6s ease-out; }
+.mach-ui { background:#222; color:#fff; font-size:10px; text-align:center; padding:3px 0; flex:1; font-weight:bold; }
+
+@keyframes pulse { 0%{opacity:1} 50%{opacity:0.5} 100%{opacity:1} }
+
+.person { position:absolute; bottom:30px; display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+.p-body { width:12px; height:18px; border-radius:3px; }
+.bubble { position:absolute; bottom:50px; background:#fff; border:1px solid #999; border-radius:6px; padding:2px 4px; font-size:12px; z-index:11; }
+
+#bottom { flex:1; display:flex; flex-direction:column; background:#f0f0f0; overflow:hidden; }
+.tabs { display:flex; background:#ddd; padding:3px; }
+.tab { flex:1; padding:10px 2px; font-size:11px; text-align:center; border:none; background:none; cursor:pointer; }
+.tab.on { background:#fff; font-weight:bold; border-radius:6px; }
+
+#juice-stat { padding:6px 12px; background:#fff; border-bottom:1px solid #ccc; max-height:80px; overflow-y:auto; }
+.jbar-wrap { height:8px; background:#eee; border-radius:4px; overflow:hidden; border:1px solid #ddd; margin-top:3px; }
+.jbar-fill { height:100%; transition: width 0.5s; }
+
+.sgrid { display:grid; grid-template-columns: 1fr 1fr; gap:6px; padding:10px; overflow-y:auto; flex:1; }
+.sc { background:#fff; border-radius:10px; padding:10px; text-align:center; border:1px solid #ccc; display:flex; flex-direction:column; justify-content:space-between; gap:2px; }
+.sc.active-item { border:2px solid #4caf50; background:#e8f5e9; }
+.sc b { font-size: 18px; }
+.sc .price-tag { font-size: 12px; font-weight: bold; color: #1b5e20; margin-bottom: 4px; }
+.sbuy { background:#1b5e20; color:#fff; border:none; padding:7px; border-radius:5px; font-size:11px; font-weight:bold; }
+
+#footer-controls { padding:8px; display:flex; gap:10px; justify-content:center; background:#eee; }
+.f-btn { padding:5px 10px; font-size:12px; border-radius:5px; border:1px solid #ccc; background:#fff; }
+</style>
+</head>
+<body>
+
+<div id="wrap">
+  <div id="menu-overlay">
+    <h1>FrischSaft Markt</h1>
+    <p>Directed by Joy</p>
+    <button class="menu-btn" onclick="startGame()">SPIEL STARTEN</button>
+    <button class="reset-btn" onclick="resetGame()">NEUES SPIEL (RESET)</button>
+  </div>
+
+  <div id="topbar">
+    <button class="pause-btn" onclick="openMenu()">⏸️</button>
+    <button id="wave-btn" onclick="toggleWave()">Welle starten</button>
+    <div id="timer-txt" style="font-weight:bold; color:#ffd54f"></div>
+    <div style="font-size:18px;">🪙 <span id="cn">15</span></div>
+  </div>
+
+  <div id="scene">
+    <div class="s-floor"></div>
+    <div id="sl"></div>
+    <div id="ml"></div>
+    <div id="pl"></div>
+  </div>
+
+  <div id="bottom">
+    <div class="tabs">
+      <button class="tab on" onclick="stab(this,'a')">Automaten</button>
+      <button class="tab" onclick="stab(this,'f')">Obst</button>
+      <button class="tab" onclick="stab(this,'m')">Coins</button>
+      <button class="tab" onclick="stab(this,'t')">Trank</button>
+    </div>
+    <div id="juice-stat"></div>
+    <div class="sgrid" id="sg"></div>
+    
+    <div id="footer-controls">
+       <button class="f-btn" onclick="toggleMusic(1)">🎵 1</button>
+       <button class="f-btn" onclick="toggleMusic(2)">🎹 2</button>
+       <button class="f-btn" onclick="toggleMusic(0)">❌</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let musicInterval = null, currentTrack = 0;
+
+function playNote(f, d, vol=0.02) {
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+  o.frequency.setValueAtTime(f, audioCtx.currentTime);
+  g.gain.setValueAtTime(vol, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + d);
+}
+
+const SXS=[10, 75, 140, 205, 270, 335];
+const MD=[
+  {id:'orange', emoji:'🍊', color:'#FF6D00', p:8},
+  {id:'blue', emoji:'🫐', color:'#1976D2', p:10},
+  {id:'green', emoji:'🥦', color:'#2E7D32', p:8},
+  {id:'violet', emoji:'🍇', color:'#6A1B9A', p:12}
+];
+
+let coins=15, bought=[], placed={}, stock={}, selMach=null, curTab='a', activeItem=null;
+let ppos=[], ptargetIdx=[], pvisible=[], waveInterval=null, timeLeft=0;
+
+// SPEICHERN & LADEN & RESET
+function saveGame() {
+  const data = { coins, bought, placed, stock };
+  localStorage.setItem('juiceMarktSave', JSON.stringify(data));
+}
+
+function loadGame() {
+  const saved = localStorage.getItem('juiceMarktSave');
+  if(saved) {
+    const d = JSON.parse(saved);
+    coins = d.coins; bought = d.bought; placed = d.placed; stock = d.stock;
+    document.getElementById('cn').innerText = coins;
+  }
+}
+
+function resetGame() {
+  if(confirm("Möchtest du wirklich von vorne anfangen? Alle Daten gehen verloren!")) {
+    localStorage.removeItem('juiceMarktSave');
+    location.reload(); // Seite neu laden
+  }
+}
+
+function startGame() {
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  document.getElementById('menu-overlay').style.display = 'none';
+  loadGame(); render(); animate();
+}
+
+function openMenu() {
+  if(waveInterval) { stopWave(); document.getElementById('wave-btn').innerText = "Fortsetzen"; }
+  saveGame(); document.getElementById('menu-overlay').style.display = 'flex';
+}
+
+function toggleWave() { if(waveInterval) stopWave(); else startWave(); }
+function startWave() {
+  if(timeLeft <= 0) timeLeft=120;
+  pvisible=Array(8).fill(true); ppos=Array(8).fill(0).map(()=>Math.random()*300);
+  ptargetIdx=Array(8).fill(0).map(()=>Math.floor(Math.random()*4));
+  document.getElementById('wave-btn').classList.add('active');
+  document.getElementById('wave-btn').innerText = "Läuft...";
+  waveInterval=setInterval(()=>{ 
+    timeLeft--; document.getElementById('timer-txt').innerText=timeLeft+"s"; 
+    if(timeLeft<=0) stopWave(); 
+  },1000);
+}
+function stopWave() { 
+  clearInterval(waveInterval); waveInterval=null; pvisible=[]; 
+  document.getElementById('wave-btn').classList.remove('active'); 
+  document.getElementById('wave-btn').innerText = "Welle starten";
+  document.getElementById('timer-txt').innerText=""; 
+}
+
+function addCoins(d){ coins+=d; document.getElementById('cn').innerText=coins; saveGame(); }
+
+function render() {
+  const sl=document.getElementById('sl'); sl.innerHTML='';
+  const ml=document.getElementById('ml'); ml.innerHTML='';
+  SXS.forEach((x, i) => {
+    if(!placed[i]) {
+      const d=document.createElement('div'); d.className='slot'+(activeItem && activeItem.type==='mach'?' highlight':'');
+      d.style.left=x+'px'; d.innerText='+';
+      d.onclick=()=>{ if(activeItem && activeItem.type==='mach'){ placed[i]=activeItem.id; stock[activeItem.id]=0; activeItem=null; saveGame(); render(); }};
+      sl.appendChild(d);
+    } else {
+      const mid=placed[i]; const m=MD.find(x=>x.id===mid); const s=stock[mid]||0;
+      const d=document.createElement('div'); d.className='mach'+(selMach===mid?' selected':'')+(activeItem && activeItem.type==='potion'?' highlight-potion':'');
+      d.style.left=x+'px';
+      d.innerHTML=`<div class="liquid-tank"><div class="liquid" style="height:${(s/20)*100}%; background:${m.color}"></div></div><div class="mach-ui">${s}/20</div>`;
+      d.onclick=(e)=>{ 
+        e.stopPropagation();
+        if(activeItem && activeItem.type==='potion'){ stock[mid]=20; addCoins(-10); activeItem=null; playNote(400,0.5); render(); }
+        else { selMach=(selMach===mid?null:mid); render(); }
+      };
+      ml.appendChild(d);
+    }
+  });
+
+  const js=document.getElementById('juice-stat'); js.innerHTML='';
+  Object.entries(placed).forEach(([i, mid]) => {
+    const s=stock[mid]||0; const m=MD.find(x=>x.id===mid);
+    js.innerHTML+=`<div style="font-size:10px; display:flex; align-items:center; gap:5px;">${m.emoji} <div class="jbar-wrap" style="flex:1;"><div class="jbar-fill" style="width:${(s/20)*100}%; background:${m.color}"></div></div></div>`;
+  });
+
+  const g=document.getElementById('sg'); g.innerHTML='';
+  if(curTab==='a') {
+    MD.forEach(m => {
+      const isB=bought.includes(m.id), isP=Object.values(placed).includes(m.id);
+      g.innerHTML+=`<div class="sc ${activeItem && activeItem.id===m.id?'active-item':''}"><b>${m.emoji}</b><div class="price-tag">${m.p} 🪙</div><button class="sbuy" onclick="clickMach('${m.id}',${m.p})">${isB?(isP?'✔':'Platzieren'):'Kaufen'}</button></div>`;
+    });
+  } else if(curTab==='f') {
+    MD.forEach(m => {
+      const isP=Object.values(placed).includes(m.id);
+      g.innerHTML+=`<div class="sc"><b>${m.emoji}</b><div class="price-tag">4 🪙</div><button class="sbuy" ${!isP?'disabled':''} onclick="buyF('${m.id}')">Auffüllen</button></div>`;
+    });
+  } else if(curTab==='m') {
+    [{a:100,p:15},{a:250,p:25},{a:10500,p:3500}].forEach(p => {
+      g.innerHTML+=`<div class="sc"><b>🪙</b><div class="price-tag">${p.p} 🪙</div><button class="sbuy" onclick="if(coins>=${p.p}){addCoins(${-p.p+p.a}); playNote(800,0.2); render();}">+${p.a} Coins</button></div>`;
+    });
+  } else {
+    g.innerHTML+=`<div class="sc ${activeItem && activeItem.type==='potion'?'active-item':''}"><b>🧪</b><div class="price-tag">10 🪙</div><button class="sbuy" onclick="activeItem={type:'potion'}; render();">Nutzen</button></div>`;
+    g.innerHTML+=`<div class="sc"><b>✨</b><div class="price-tag">50 🪙</div><button class="sbuy" onclick="if(coins>=50){addCoins(1000-coins); render();}">Gold-Cheat</button></div>`;
+  }
+}
+
+function clickMach(id, p) {
+  if(bought.includes(id)) activeItem = {type:'mach', id};
+  else if(coins>=p){ addCoins(-p); bought.push(id); playNote(600,0.2); }
+  render();
+}
+function buyF(id){ if(coins>=4){ addCoins(-4); stock[id]=Math.min(20,(stock[id]||0)+6); playNote(400,0.2); render(); } }
+function stab(el,t){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on')); el.classList.add('on'); curTab=t; render(); }
+
+function toggleMusic(t){
+  clearInterval(musicInterval); if(t===0||currentTrack===t){currentTrack=0; return;}
+  currentTrack=t; musicInterval=setInterval(()=>playNote(t===1?261:349,0.5, 0.01),500);
+}
+
+function animate(){
+  const pl=document.getElementById('pl'); pl.innerHTML='';
+  const targets = Object.entries(placed).map(([i,id])=>({x:SXS[i]+25, id}));
+  if(pvisible.length > 0) {
+    pvisible.forEach((v, i) => {
+      if(!v) return;
+      const t = targets.length > 0 ? targets[i%targets.length] : null;
+      const tx = t ? t.x : ppos[i];
+      const dx = tx - ppos[i];
+      if(Math.abs(dx)>3) ppos[i]+=Math.sign(dx)*0.6;
+      const d=document.createElement('div'); d.className='person'; d.style.left=ppos[i]+'px';
+      d.innerHTML=`<div class="p-body" style="background:${['#E91E63','#00BCD4','#9C27B0','#FFEB3B'][i%4]}"></div>`;
+      if(t && Math.abs(dx)<25) d.innerHTML+=`<div class="bubble">${MD.find(x=>x.id===t.id).emoji}</div>`;
+      d.onclick=()=>{
+        if(selMach && stock[selMach]>0 && t && t.id === selMach && Math.abs(dx)<35) {
+          stock[selMach]--; addCoins(10); pvisible[i]=false; selMach=null;
+          playNote(1000,0.1); setTimeout(()=>pvisible[i]=true, 2500); render();
+        }
+      };
+      pl.appendChild(d);
+    });
+  }
+  requestAnimationFrame(animate);
+}
+</script>
+</body>
+</html>

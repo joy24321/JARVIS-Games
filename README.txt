@@ -1,0 +1,1 @@
+JARVIS Games für GitHub Pages. Alle HTML-Dateien einzeln (nicht ZIP) ins Stammverzeichnis des Repositories hochladen. Diese Version trennt eingebettete Spiele in einzelne HTML-Dateien. Es wurde KEIN neuer Multiplayer oder einheitlicher Spielstand-Sync implementiert. Browser-Speicher ist gerätegebunden. MonsterWorld bleibt ein externer Link.
