@@ -7,3 +7,5 @@ Die vom Nutzer gelieferte HTML-Datei heißt intern JoyWorld und wurde inhaltlich
 Achtung: Sie referenziert möglicherweise zusätzliche Bilder, Videos und andere Dateien, die nicht mitgeliefert wurden. Diese müssen bei Bedarf separat hochgeladen werden.
 Bestehende Spiel-Speicherfunktionen der anderen Dateien sind unverändert.
 Kein neuer echter synchronisierter Multiplayer für MonsterWorld implementiert.
+
+Zombie Game wurde entfernt: zombie.html auf GitHub bitte ebenfalls löschen.

@@ -1,0 +1,324 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gedankenleser – JARVIS</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#16234a,#0a0a1a 60%);color:#e6f6ff;font-family:Arial,sans-serif;display:flex;flex-direction:column;align-items:center;padding:56px 14px 80px}
+#back{position:fixed;left:10px;top:10px;z-index:50;color:#0ff;text-decoration:none;background:#0d1b2a;border:1px solid #0ff6;border-radius:18px;padding:6px 12px;font-size:13px}
+h1{margin:0 0 4px;color:#0ff;letter-spacing:3px;text-shadow:0 0 14px #0ff;font-size:26px;text-align:center}
+.sub{color:#8ac;font-size:13px;margin-bottom:14px;text-align:center}
+#orb{width:130px;height:130px;border-radius:50%;margin:8px auto 14px;background:radial-gradient(circle at 35% 30%,#bff,#0aa 40%,#034 75%);box-shadow:0 0 40px #0ff8,inset 0 0 30px #0ff;position:relative;animation:pulse 2.4s ease-in-out infinite}
+#orb::after{content:'';position:absolute;inset:38% 22%;border-radius:50%;background:radial-gradient(#fff,transparent 70%);opacity:.5}
+#orb.think{animation:spin 1s linear infinite}
+@keyframes pulse{50%{box-shadow:0 0 70px #0ffb,inset 0 0 40px #0ff}}@keyframes spin{to{filter:hue-rotate(360deg)}}
+.card{width:100%;max-width:480px;background:#0d1b2acc;border:1px solid #0ff4;border-radius:18px;padding:18px;box-shadow:0 10px 40px #0008}
+#qnum{color:#0ff;font-size:13px;font-weight:bold}#q{font-size:21px;line-height:1.35;margin:8px 0 16px;min-height:56px}
+.bar{height:6px;background:#123;border-radius:4px;overflow:hidden;margin-bottom:14px}.bar i{display:block;height:100%;background:linear-gradient(90deg,#0aa,#0ff);width:0;transition:width .4s}
+.ans{display:grid;gap:8px}.ans button,.btn{padding:12px;border-radius:12px;border:1px solid #0ff4;background:#102a3e;color:#e6f6ff;font-size:16px;cursor:pointer;font-weight:bold;transition:background .15s}
+.ans button:hover,.btn:hover{background:#17405c}.ans button.y{border-color:#3d7}.ans button.n{border-color:#e55}
+.btn.pri{background:#0cc;color:#001;border:0}.row{display:flex;gap:8px;margin-top:10px}.row>*{flex:1}
+.guess{text-align:center}.guess .emo{font-size:72px;line-height:1.1}.guess .name{font-size:28px;font-weight:bold;color:#fff;margin:6px 0 2px}
+input,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #0ff5;background:#06101c;color:#fff;font-size:15px;margin:4px 0 10px}
+label{font-size:13px;color:#9cd}.small{font-size:12px;color:#8ac;line-height:1.5}
+#who{font-size:12px;color:#ffd23a;min-height:16px;margin-top:8px;text-align:center}
+#stats{margin-top:14px;text-align:center}.hist{max-height:150px;overflow:auto;font-size:12px;color:#9bc;margin-top:10px;text-align:left}.hist div{padding:2px 0;border-bottom:1px solid #fff1}
+</style></head><body>
+<a id="back" href="index.html">← Menü</a>
+<h1>🔮 GEDANKENLESER</h1><div class="sub">Denk an eine Figur – echt oder erfunden. Ich errate sie!</div>
+<div id="orb"></div>
+<div class="card" id="card"></div>
+<div id="who"></div>
+<div class="small" id="stats"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
+<script>
+/* ===== JARVIS Multiplayer (PeerJS, Stern-Topologie: Host leitet weiter) ===== */
+const Store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const MP=(()=>{
+  let peer=null,conns=[],host=false,myId=null,handlers=[],roster={};
+  const listeners={status:[],roster:[]};
+  const myName=()=>Store.get('jv_player_name','')||'Spieler';
+  function fire(t,a){(listeners[t]||[]).forEach(f=>f(a))}
+  function status(s){fire('status',s);const el=document.getElementById('mp-status');if(el)el.textContent=s}
+  function emit(m,from){handlers.forEach(h=>{try{h(m,from)}catch(e){console.error(e)}})}
+  function pushRoster(){if(!host)return;const r=Object.assign({},roster);r[myId]=myName();conns.forEach(c=>{try{c.send({type:'_roster',players:r})}catch(e){}});setRoster(r)}
+  function setRoster(r){roster=r;fire('roster',roster);const el=document.getElementById('mp-players');if(el)el.innerHTML=Object.entries(roster).map(([id,n])=>'<span>'+(id===myId?'⭐ ':'👤 ')+esc(n)+'</span>').join('')}
+  function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function attach(c){
+    c.on('open',()=>{conns.push(c);c.send({type:'_hello',name:myName()});status(host?'🟢 '+conns.length+' Mitspieler verbunden':'🟢 Verbunden mit Raum '+c.peer);emit({type:'_join',id:c.peer},c.peer)});
+    c.on('data',d=>{
+      if(!d||typeof d!=='object')return;
+      if(d.type==='_hello'){roster[c.peer]=String(d.name||'Spieler').slice(0,16);pushRoster();return}
+      if(d.type==='_roster'){setRoster(d.players);return}
+      const from=d._from||c.peer;
+      if(host&&!d._from){d._from=c.peer;conns.forEach(o=>{if(o!==c&&o.open)try{o.send(d)}catch(e){}})}
+      emit(d,from)});
+    c.on('close',()=>{conns=conns.filter(x=>x!==c);delete roster[c.peer];if(host)pushRoster();else setRoster({});emit({type:'_leave',id:c.peer},c.peer);status(host?'🔵 Raum offen · '+conns.length+' Mitspieler':'🔴 Verbindung beendet')});
+    c.on('error',e=>status('Verbindungsfehler: '+(e&&e.message||e)));
+  }
+  function newPeer(id){
+    if(typeof Peer==='undefined'){status('PeerJS konnte nicht geladen werden. Internet prüfen.');return null}
+    leave(true);peer=id?new Peer(id,{debug:0}):new Peer({debug:0});
+    peer.on('error',e=>status('Fehler: '+(e&&e.type==='peer-unavailable'?'Raum nicht gefunden':(e&&e.message||e))));
+    peer.on('connection',c=>{if(host)attach(c);else c.close()});
+    return peer}
+  function hostRoom(prefix){const code=(prefix||'JV')+'-'+Math.random().toString(36).slice(2,7).toUpperCase();const p=newPeer(code);if(!p)return;host=true;status('⏳ Raum wird erstellt…');p.on('open',id=>{myId=id;const r=document.getElementById('mp-code');if(r)r.value=id;setRoster({[id]:myName()});status('🔵 Raum '+id+' bereit – Code teilen!');emit({type:'_hosted',id},id)})}
+  function join(code){code=(code||'').trim().toUpperCase();if(!code){status('Bitte Raumcode eingeben.');return}const p=newPeer();if(!p)return;host=false;status('⏳ Verbinde…');p.on('open',id=>{myId=id;attach(p.connect(code,{reliable:true}))})}
+  function leave(silent){conns.forEach(c=>{try{c.close()}catch(e){}});conns=[];if(peer){try{peer.destroy()}catch(e){}}peer=null;host=false;roster={};setRoster({});if(!silent){status('Offline – Einzelspieler');emit({type:'_left'},null)}}
+  function send(m){if(!conns.length)return;m._from=myId;conns.forEach(c=>{if(c.open)try{c.send(m)}catch(e){}})}
+  function mountPanel(opts){
+    opts=opts||{};
+    const css=document.createElement('style');css.textContent=`
+#mp-btn{position:fixed;right:10px;bottom:10px;z-index:9000;background:#0d1b2a;color:#0ff;border:1px solid #0ff8;border-radius:22px;padding:9px 14px;font:bold 14px Arial,sans-serif;box-shadow:0 0 12px #0ff4;cursor:pointer}
+#mp-panel{position:fixed;right:10px;bottom:56px;z-index:9001;width:min(310px,calc(100vw - 20px));background:#0a0f1fef;border:1px solid #0ff6;border-radius:14px;padding:12px;color:#cfe;font:14px Arial,sans-serif;display:none;box-shadow:0 8px 30px #000a}
+#mp-panel.open{display:block}#mp-panel h3{margin:0 0 8px;color:#0ff;font-size:15px}
+#mp-panel input{width:100%;padding:8px;border-radius:8px;border:1px solid #0ff5;background:#06101c;color:#fff;font-size:14px;margin:3px 0 7px;box-sizing:border-box}
+#mp-panel .row{display:flex;gap:6px}#mp-panel button{flex:1;padding:8px 6px;border-radius:8px;border:0;background:#0aa;color:#001;font-weight:bold;cursor:pointer;font-size:13px}
+#mp-panel button.sec{background:#223a4a;color:#cff}#mp-status{font-size:12px;color:#8cd;margin-top:8px;min-height:16px}
+#mp-players{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;font-size:12px}#mp-players span{background:#123;padding:3px 7px;border-radius:10px}
+#mp-extra{margin-top:8px}#mp-panel small{color:#7aa;display:block;margin-top:6px;line-height:1.35}`;
+    document.head.appendChild(css);
+    const b=document.createElement('button');b.id='mp-btn';b.textContent='🌍 Multiplayer';
+    const p=document.createElement('div');p.id='mp-panel';
+    p.innerHTML=`<h3>🌍 Multiplayer</h3><label>Dein Name</label><input id="mp-name" maxlength="16" placeholder="Name"><div class="row"><button id="mp-host">Raum erstellen</button></div><label style="display:block;margin-top:8px">Raumcode</label><input id="mp-code" placeholder="z.B. JV-AB12C" autocapitalize="characters"><div class="row"><button id="mp-join">Beitreten</button><button class="sec" id="mp-leave">Verlassen</button></div><div id="mp-status">Offline – Einzelspieler</div><div id="mp-players"></div><div id="mp-extra"></div><small>${opts.hint||''}</small>`;
+    document.body.appendChild(b);document.body.appendChild(p);
+    b.onclick=()=>p.classList.toggle('open');
+    const n=document.getElementById('mp-name');n.value=Store.get('jv_player_name','');n.onchange=()=>{Store.set('jv_player_name',n.value.trim().slice(0,16));if(peer){if(host)pushRoster();else send({type:'_hello',name:myName()})}};
+    document.getElementById('mp-host').onclick=()=>hostRoom(opts.prefix);
+    document.getElementById('mp-join').onclick=()=>join(document.getElementById('mp-code').value);
+    document.getElementById('mp-leave').onclick=()=>leave();
+    return document.getElementById('mp-extra');
+  }
+  return{hostRoom,join,leave,send,mountPanel,esc,on:(t,f)=>{if(t==='msg')handlers.push(f);else(listeners[t]=listeners[t]||[]).push(f)},
+    get online(){return conns.length>0},get isHost(){return host},get id(){return myId},get roster(){return roster},name:myName};
+})();
+
+/* ===== JARVIS Sound & Musik (Web Audio, alles synthetisch – keine Dateien nötig) ===== */
+const SND=(()=>{
+  let ac=null,master,mus,sfx,cfg=Object.assign({music:true,sfx:true},Store.get('jv_sound',{}));
+  let want=null,cur=null,step=0,nextT=0,timer=null,tempo=1,noiseBuf=null;
+  const mf=m=>440*Math.pow(2,(m-69)/12);
+  function init(){
+    if(ac){if(ac.state==='suspended')ac.resume();return}
+    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    ac=new AC();master=ac.createGain();master.gain.value=.7;
+    const comp=ac.createDynamicsCompressor();master.connect(comp);comp.connect(ac.destination);
+    mus=ac.createGain();sfx=ac.createGain();mus.connect(master);sfx.connect(master);apply();
+    noiseBuf=ac.createBuffer(1,ac.sampleRate,ac.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    timer=setInterval(sched,25)}
+  function apply(){if(!ac)return;mus.gain.setTargetAtTime(cfg.music?.32:0,ac.currentTime,.05);sfx.gain.setTargetAtTime(cfg.sfx?.8:0,ac.currentTime,.02);Store.set('jv_sound',cfg);ui()}
+  ['pointerdown','keydown','touchstart'].forEach(e=>addEventListener(e,init,{passive:true}));
+  /* Bausteine */
+  function tone(f,d,o){o=o||{};if(!ac)return;const t=o.t||ac.currentTime,g=ac.createGain(),os=ac.createOscillator();os.type=o.type||'square';os.frequency.setValueAtTime(f,t);
+    if(o.to)os.frequency.exponentialRampToValueAtTime(o.to,t+d);if(o.det)os.detune.value=o.det;
+    const v=o.v==null?.3:o.v,a=o.a||.005;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    let node=os;if(o.lp){const f2=ac.createBiquadFilter();f2.type='lowpass';f2.frequency.value=o.lp;f2.Q.value=o.q||1;os.connect(f2);node=f2}
+    node.connect(g);g.connect(o.dest||sfx);os.start(t);os.stop(t+d+.02)}
+  function noise(d,o){o=o||{};if(!ac)return;const t=o.t||ac.currentTime,s=ac.createBufferSource();s.buffer=noiseBuf;const f=ac.createBiquadFilter();f.type=o.ft||'highpass';f.frequency.value=o.f||1000;
+    if(o.fto)f.frequency.exponentialRampToValueAtTime(o.fto,t+d);const g=ac.createGain();g.gain.setValueAtTime(o.v||.3,t);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    s.connect(f);f.connect(g);g.connect(o.dest||sfx);s.start(t,Math.random()*.5);s.stop(t+d+.02)}
+  const kick=(t,v)=>tone(150,.16,{t,type:'sine',to:40,v:v||.9,dest:mus});
+  const snare=(t,v)=>{noise(.13,{t,f:1500,v:v||.35,dest:mus});tone(190,.08,{t,type:'triangle',v:.25,dest:mus})};
+  const hat=(t,v)=>noise(.035,{t,f:7500,v:v||.12,dest:mus});
+  const note=(m,t,d,o)=>tone(mf(m),d,Object.assign({t,dest:mus},o));
+  /* Effekte */
+  const FX={
+    click(){tone(880,.06,{type:'triangle',v:.2})},
+    jump(){tone(330,.16,{to:740,v:.22})},
+    spring(){tone(220,.35,{to:1400,type:'triangle',v:.3});tone(440,.3,{to:2000,v:.1,det:12})},
+    crack(){noise(.18,{f:800,ft:'bandpass',v:.5});tone(140,.12,{type:'sawtooth',to:60,v:.2})},
+    stomp(){tone(500,.12,{to:120,type:'square',v:.3});noise(.1,{f:400,ft:'lowpass',v:.4})},
+    fall(){tone(700,1.1,{to:80,type:'triangle',v:.3,a:.02})},
+    coin(n){const b=988*Math.pow(2,Math.min(n||0,12)/48);tone(b,.07,{v:.18});tone(b*1.335,.16,{t:ac&&ac.currentTime+.06,v:.18})},
+    swish(){noise(.14,{f:600,fto:3500,ft:'bandpass',v:.35})},
+    jump2(){tone(260,.2,{to:620,type:'triangle',v:.3});noise(.08,{f:2000,v:.12})},
+    roll(){noise(.25,{f:2500,fto:400,ft:'bandpass',v:.35})},
+    power(){if(!ac)return;const t=ac.currentTime;[0,4,7,12].forEach((s,i)=>tone(mf(72+s),.15,{t:t+i*.06,type:'square',v:.18}))},
+    shield(){tone(300,.5,{to:1200,type:'sine',v:.35});noise(.3,{f:3000,v:.15})},
+    crash(){noise(.6,{f:3000,fto:200,ft:'lowpass',v:.8});tone(120,.5,{type:'sawtooth',to:35,v:.4})},
+    win(){if(!ac)return;const t=ac.currentTime;[60,64,67,72,76,79,84].forEach((m,i)=>tone(mf(m),.25,{t:t+i*.08,type:'square',v:.16}));tone(mf(84),.8,{t:t+.56,type:'triangle',v:.25})},
+    lose(){if(!ac)return;const t=ac.currentTime;[67,63,60,55].forEach((m,i)=>tone(mf(m),.35,{t:t+i*.18,type:'triangle',v:.25}))},
+    think(){tone(mf(76+Math.floor(Math.random()*5)*2),.5,{type:'sine',v:.15,a:.01})},
+    reveal(){if(!ac)return;const t=ac.currentTime;noise(.8,{f:300,fto:6000,ft:'bandpass',v:.25});[62,66,69,74].forEach((m,i)=>tone(mf(m+12),1.1,{t:t+.35+i*.07,type:'sine',v:.14}))},
+    no(){tone(220,.18,{type:'sawtooth',v:.2,lp:900});tone(165,.3,{t:ac&&ac.currentTime+.15,type:'sawtooth',v:.2,lp:900})},
+    learn(){if(!ac)return;const t=ac.currentTime;[69,74,78,81,86].forEach((m,i)=>tone(mf(m),.5,{t:t+i*.1,type:'sine',v:.15}))},
+  };
+  /* Musikstücke: f(i=Schritt 0-15, bar, t, d=Schrittdauer) */
+  const SONGS={
+    sky:{bpm:128,bars:4,f(i,b,t,d){const ch=[[60,64,67],[55,59,62],[57,60,64],[53,57,60]][b];
+      if(i%4===0)note(ch[0]-24,t,d*3,{type:'triangle',v:.5});if(i%4===2)note(ch[0]-12,t,d*1.5,{type:'triangle',v:.3});
+      if(i%2===0)note(ch[[0,1,2,1,0,2,1,2][(i/2)%8]]+12,t,d*1.6,{type:'square',v:.07,lp:2600});
+      if(b===3&&i>=12)note([72,74,76,79][i-12],t,d*.9,{type:'square',v:.08,lp:3000});
+      if(i%8===0)kick(t,.6);if(i%8===4)snare(t,.2);if(i%2===1)hat(t,.06)}},
+    rush:{bpm:146,bars:4,f(i,b,t,d){const r=[45,41,48,43][b];
+      note((i%2?r+12:r)-12,t,d*.9,{type:'sawtooth',v:.28,lp:700+300*(i%4),q:4});
+      if([0,3,6,10,12].includes(i))note(r+24+[0,7,12,7,3][[0,3,6,10,12].indexOf(i)],t,d*1.2,{type:'square',v:.06,lp:2500});
+      if(i%4===0)kick(t,.8);if(i%8===4)snare(t,.3);if(i%2===1)hat(t,.09);if(i===14&&b===3)snare(t,.25)}},
+    mystic:{bpm:72,bars:4,f(i,b,t,d){const ch=[[50,53,57],[46,50,53],[53,57,60],[45,49,52]][b];
+      if(i===0)ch.forEach(m=>{note(m,t,d*16,{type:'triangle',v:.09,a:.8});note(m+12,t,d*16,{type:'sine',v:.04,a:1.2,det:6})});
+      if(i===0||i===8)note(ch[0]-12,t,d*8,{type:'sine',v:.25,a:.3});
+      if([2,5,7,11,14].includes(i)&&((i*7+b*3)%5)<3)note(ch[(i+b)%3]+24,t,d*6,{type:'sine',v:.07,a:.005})}},
+  };
+  function sched(){if(!ac)return;
+    if(want!==cur){cur=want;step=0;nextT=ac.currentTime+.05}
+    if(!cur||!SONGS[cur])return;const S=SONGS[cur];
+    while(nextT<ac.currentTime+.15){const d=60/(S.bpm*tempo)/4;try{S.f(step%16,Math.floor(step/16)%S.bars,nextT,d)}catch(e){}nextT+=d;step++}}
+  /* Bedienknöpfe */
+  function ui(){const m=document.getElementById('snd-m'),s=document.getElementById('snd-s');if(m){m.textContent=cfg.music?'🎵':'🎵̸';m.style.opacity=cfg.music?1:.4}if(s){s.textContent=cfg.sfx?'🔊':'🔇';s.style.opacity=cfg.sfx?1:.5}}
+  function mount(){const st=document.createElement('style');st.textContent='#snd-bar{position:fixed;left:10px;bottom:10px;z-index:9000;display:flex;gap:6px}#snd-bar button{width:42px;height:42px;border-radius:50%;background:#0d1b2a;border:1px solid #0ff8;color:#fff;font-size:18px;cursor:pointer;box-shadow:0 0 10px #0ff3}';document.head.appendChild(st);
+    const b=document.createElement('div');b.id='snd-bar';b.innerHTML='<button id="snd-m" title="Musik an/aus">🎵</button><button id="snd-s" title="Soundeffekte an/aus">🔊</button>';document.body.appendChild(b);
+    document.getElementById('snd-m').onclick=()=>{init();cfg.music=!cfg.music;apply()};document.getElementById('snd-s').onclick=()=>{init();cfg.sfx=!cfg.sfx;apply();FX.click()};ui();
+    document.addEventListener('click',e=>{if(e.target.closest('.btn,#mp-panel button,.ans button,.item,.skin'))play('click')},true)}
+  function play(n,a){if(!ac||!cfg.sfx)return;try{FX[n]&&FX[n](a)}catch(e){}}
+  if(document.readyState==='loading')addEventListener('DOMContentLoaded',mount);else mount();
+  return{play,music(n){want=n},tempo(x){tempo=x},init};
+})();
+
+const $=id=>document.getElementById(id),esc=MP.esc;
+const BASEQ={
+real:'Ist deine Figur eine echte Person, die wirklich existiert (oder existiert hat)?',male:'Ist deine Figur männlich?',human:'Ist deine Figur ein Mensch?',animal:'Ist deine Figur ein Tier oder sieht wie ein Tier aus?',
+alive:'Lebt deine Figur heute noch?',historic:'Lebte deine Figur hauptsächlich vor 1950?',cartoon:'Stammt deine Figur aus einem Zeichentrick- oder Animationsfilm bzw. einer Serie?',
+game:'Ist deine Figur vor allem aus Videospielen bekannt?',movie:'Ist deine Figur aus Realfilmen (mit echten Schauspielern) bekannt?',book:'Stammt deine Figur ursprünglich aus einem Buch?',
+hero:'Ist deine Figur ein Superheld?',magic:'Hat deine Figur magische oder übernatürliche Kräfte?',sport:'Ist deine Figur durch Sport berühmt?',football:'Hat deine Figur mit Fussball zu tun?',
+music:'Ist deine Figur durch Musik berühmt?',politic:'Ist deine Figur in der Politik oder als Herrscher/in bekannt?',science:'Ist deine Figur durch Wissenschaft, Erfindungen oder Technik bekannt?',
+europe:'Stammt deine Figur aus Europa?',usa:'Stammt deine Figur aus den USA?',swiss:'Hat deine Figur etwas mit der Schweiz zu tun?',german:'Kommt deine Figur aus Deutschland oder Österreich?',
+villain:'Ist deine Figur ein Bösewicht?',child:'Ist deine Figur ein Kind oder Jugendlicher?',fly:'Kann deine Figur fliegen?',mask:'Trägt deine Figur eine Maske oder einen Helm?',
+yellow:'Ist deine Figur überwiegend gelb?',green:'Ist deine Figur überwiegend grün?',hat:'Trägt deine Figur typischerweise einen Hut oder eine Mütze?',beard:'Hat deine Figur einen Bart oder Schnurrbart?',
+nintendo:'Gehört deine Figur zu Nintendo?',starwars:'Gehört deine Figur zu Star Wars?',disney:'Gehört deine Figur zu Disney?',marvel:'Gehört deine Figur zu Marvel?',dc:'Gehört deine Figur zu DC Comics?',
+royal:'Ist deine Figur ein König, eine Königin, ein Prinz oder eine Prinzessin?',weapon:'Kämpft deine Figur oft mit einer Waffe (Schwert, Bogen, Zauberstab …)?',water:'Lebt deine Figur im oder am Wasser?',
+internet:'Ist deine Figur durch Internet, YouTube oder Social Media berühmt?',actor:'Ist deine Figur Schauspieler/in?',female:'Ist deine Figur weiblich?',potter:'Gehört deine Figur zur Harry-Potter-Welt?',simpsons:'Gehört deine Figur zu den Simpsons?'};
+/* a: Merkmale = ja; p: Teilwerte; alles andere = nein */
+const BASEC=[
+['Albert Einstein','🧑‍🔬','real male human historic science europe german',{beard:.6}],
+['Lionel Messi','⚽','real male human alive sport football',{beard:1}],
+['Cristiano Ronaldo','⚽','real male human alive sport football europe',{}],
+['Roger Federer','🎾','real male human alive sport europe swiss',{}],
+['Taylor Swift','🎤','real human alive music usa female',{}],
+['Michael Jackson','🕺','real male human music usa',{hat:.5}],
+['Elon Musk','🚀','real male human alive science',{usa:.8,internet:.5}],
+['Barack Obama','🏛️','real male human alive politic usa',{}],
+['Donald Trump','🏛️','real male human alive politic usa',{}],
+['Angela Merkel','🏛️','real human alive politic europe german female',{}],
+['Napoleon Bonaparte','🎖️','real male human historic politic europe royal hat',{weapon:.5}],
+['Wolfgang Amadeus Mozart','🎼','real male human historic music europe german',{}],
+['Kleopatra','👑','real human historic politic royal female',{}],
+['Queen Elizabeth II','👑','real human politic europe royal female hat',{historic:.3}],
+['MrBeast','📹','real male human alive usa internet beard',{}],
+['Arnold Schwarzenegger','💪','real male human alive actor german movie',{politic:.6,usa:.6,europe:.6,sport:.5}],
+['Wilhelm Tell','🏹','male human historic europe swiss weapon beard hat',{real:.4}],
+['Heidi','👧','human child europe swiss book female',{cartoon:.6,movie:.5}],
+['Harry Potter','⚡','male human book movie magic child europe weapon potter',{}],
+['Hermione Granger','📚','human book movie magic child europe female potter',{weapon:.5}],
+['Lord Voldemort','🐍','male villain magic book movie europe weapon potter',{human:.6}],
+['Gandalf','🧙','male book movie magic beard hat weapon',{human:.5}],
+['Sherlock Holmes','🔍','male human book europe hat',{movie:.7,historic:.7}],
+['Pippi Langstrumpf','👧','human child book europe female',{magic:.3,movie:.5}],
+['Pinocchio','🤥','male child book europe cartoon disney magic',{human:.3,hat:.6}],
+['Weihnachtsmann','🎅','male human magic fly beard hat',{real:.2,europe:.4}],
+['Micky Maus','🐭','male animal cartoon disney usa',{}],
+['Donald Duck','🦆','male animal cartoon disney usa hat',{water:.4}],
+['Elsa','❄️','human cartoon disney magic royal female',{}],
+['Olaf','⛄','male cartoon disney magic',{}],
+['Simba','🦁','male animal cartoon disney royal',{child:.5}],
+['Arielle','🧜‍♀️','cartoon disney royal water female',{human:.5,magic:.5}],
+['Nemo','🐠','male animal cartoon disney child water',{}],
+['Shrek','🟢','male cartoon green royal',{magic:.2}],
+['SpongeBob','🧽','male cartoon yellow water usa',{}],
+['Homer Simpson','🍩','male human cartoon yellow usa simpsons',{}],
+['Bart Simpson','🛹','male human cartoon yellow usa child simpsons',{}],
+['Garfield','🐱','male animal cartoon usa',{}],
+['Biene Maja','🐝','animal cartoon yellow fly europe german female book',{child:.6}],
+['Pikachu','⚡','animal cartoon game nintendo yellow magic',{male:.5}],
+['Super Mario','🍄','male human game nintendo hat beard',{cartoon:.5}],
+['Link','🗡️','male human game nintendo weapon green hat',{magic:.5}],
+['Sonic','🦔','male animal game',{cartoon:.5}],
+['Steve (Minecraft)','⛏️','male human game weapon',{}],
+['Batman','🦇','male human hero mask movie usa dc',{cartoon:.6}],
+['Superman','🦸','male hero fly movie usa dc',{human:.5,cartoon:.5}],
+['Joker','🃏','male human villain movie usa dc',{cartoon:.5}],
+['Spider-Man','🕷️','male human hero mask marvel movie usa',{child:.6,cartoon:.5}],
+['Iron Man','🤖','male human hero mask marvel movie fly science usa',{}],
+['Hulk','💚','male hero marvel green movie usa',{human:.5}],
+['Thanos','🟣','male villain marvel movie',{weapon:.5,magic:.5}],
+['Darth Vader','⚫','male villain mask starwars movie weapon magic',{human:.6}],
+['Yoda','🟢','male starwars movie magic green weapon',{}],
+['Barbie','💖','human female usa',{movie:.6,cartoon:.5}],
+];
+const DBKEY='jarvis_aki_db_v1',STATKEY='jarvis_aki_stats_v1';
+let learned=Store.get(DBKEY,{chars:{},questions:{}});let stats=Store.get(STATKEY,{games:0,wins:0,learned:0});
+function saveDB(){Store.set(DBKEY,learned)}
+function buildDB(){
+  const Q=Object.assign({},BASEQ);for(const[k,v]of Object.entries(learned.questions))Q[k]=v;
+  const C={};for(const[n,e,a,p]of BASEC){const v={};for(const k of Object.keys(BASEQ))v[k]=0;a.split(' ').forEach(k=>v[k]=1);Object.assign(v,p);if(!v.real){if(p.alive==null)v.alive=.5;if(p.historic==null)v.historic=.5}if(v.male===1)v.female=0;else if(!a.includes('female')&&p.female==null)v.female=.5;C[n]={n,e,v}}
+  for(const[n,o]of Object.entries(learned.chars)){if(!C[n])C[n]={n,e:o.e||'✨',v:{}};Object.assign(C[n].v,o.v)}
+  for(const c of Object.values(C))for(const k of Object.keys(Q))if(c.v[k]==null)c.v[k]=.5;
+  return{Q,C:Object.values(C)}}
+let DB=buildDB();
+/* ---- Spiel-Engine (läuft beim Host bzw. offline) ---- */
+const ANS=[{v:1,t:'Ja',c:'y'},{v:.75,t:'Wahrscheinlich',c:''},{v:null,t:'Weiß nicht',c:''},{v:.25,t:'Eher nicht',c:''},{v:0,t:'Nein',c:'n'}];
+let S=null;
+function newGame(){DB=buildDB();S={phase:'ask',answers:[],excluded:[],wrong:0,q:null,guess:null,by:''};S.q=pickQ();if(!S.q)S.phase='teach';}
+function lik(a,v){return 1-Math.abs(a-v)*0.93}
+function posterior(){const P=[];let sum=0;for(const c of DB.C){if(S.excluded.includes(c.n)){P.push(0);continue}let p=1;for(const[k,a]of S.answers){if(a==null)continue;p*=lik(a,c.v[k]??.5)}P.push(p);sum+=p}return P.map(p=>sum?p/sum:0)}
+function H(ps){let h=0;for(const p of ps)if(p>1e-9)h-=p*Math.log2(p);return h}
+function pickQ(){const P=posterior(),asked=new Set(S.answers.map(a=>a[0]));let best=null,bs=-1;
+  for(const k of Object.keys(DB.Q)){if(asked.has(k))continue;let py=0;const Py=[],Pn=[];
+    DB.C.forEach((c,i)=>{const v=c.v[k]??.5;const y=P[i]*lik(1,v),n=P[i]*lik(0,v);Py.push(y);Pn.push(n);py+=y});
+    const pn=Pn.reduce((a,b)=>a+b,0),tot=py+pn;if(!tot)continue;const hy=H(Py.map(x=>x/py)),hn=H(Pn.map(x=>x/pn));
+    const gain=H(P)-(py/tot*hy+pn/tot*hn)+Math.random()*0.02;if(gain>bs){bs=gain;best=k}}
+  return bs>0.01?best:null}
+function topGuess(){const P=posterior();let bi=-1,bp=0;P.forEach((p,i)=>{if(p>bp){bp=p;bi=i}});return bi<0?null:{c:DB.C[bi],p:bp}}
+function apply(action,by){
+  if(action.t==='new'){newGame();S.by=by||'';broadcastState();render();return}
+  if(!S)return;S.by=by||'';
+  if(action.t==='ans'&&S.phase==='ask'){S.answers.push([S.q,action.v]);const t=topGuess();const n=S.answers.length;
+    if(t&&((t.p>0.82&&n>=5)||n>=22+S.wrong*5||t.p>0.97&&n>=3)){S.phase='guess';S.guess={n:t.c.n,e:t.c.e}}
+    else{S.q=pickQ();if(!S.q){if(t&&t.p>0){S.phase='guess';S.guess={n:t.c.n,e:t.c.e}}else S.phase='teach'}}}
+  else if(action.t==='undo'&&S.phase==='ask'&&S.answers.length){const l=S.answers.pop();S.q=l[0]}
+  else if(action.t==='right'&&S.phase==='guess'){S.phase='won';reinforce(S.guess.n);stats.games++;stats.wins++;Store.set(STATKEY,stats)}
+  else if(action.t==='wrong'&&S.phase==='guess'){S.excluded.push(S.guess.n);S.wrong++;if(S.wrong>=3){S.phase='teach'}else{S.phase='ask';S.q=pickQ();if(!S.q)S.phase='teach'}}
+  else if(action.t==='teach'&&S.phase==='teach'){teach(action.d);stats.games++;Store.set(STATKEY,stats);S.phase='lost';S.taught=action.d.name}
+  else if(action.t==='giveup'&&S.phase==='ask'){S.phase='teach'}
+  broadcastState();render();}
+function reinforce(name){const c=DB.C.find(x=>x.n===name);if(!c)return;const o=learned.chars[name]||{e:c.e,v:{}};
+  for(const[k,a]of S.answers){if(a==null)continue;const cur=o.v[k]??c.v[k]??.5;o.v[k]=Math.round((cur*0.8+a*0.2)*100)/100}learned.chars[name]=o;saveDB();shareDB()}
+function teach(d){const name=d.name.trim().slice(0,40);if(!name)return;const ex=DB.C.find(c=>c.n.toLowerCase()===name.toLowerCase());const key=ex?ex.n:name;
+  const o=learned.chars[key]||{e:d.emoji||'✨',v:{}};if(!ex)stats.learned++;
+  for(const[k,a]of S.answers){if(a!=null)o.v[k]=a}
+  if(d.q&&d.q.trim().length>5){const qk='u_'+Date.now().toString(36);let txt=d.q.trim();if(!txt.endsWith('?'))txt+='?';learned.questions[qk]=txt.slice(0,140);o.v[qk]=1;
+    const lastWrong=S.excluded[S.excluded.length-1];if(lastWrong){const w=learned.chars[lastWrong]||{e:(DB.C.find(c=>c.n===lastWrong)||{}).e||'✨',v:{}};w.v[qk]=0;learned.chars[lastWrong]=w}}
+  learned.chars[key]=o;saveDB();shareDB();DB=buildDB()}
+/* ---- Darstellung ---- */
+function view(){if(!S)return{phase:'start'};const t=S.phase==="ask"?topGuess():null;
+  return{phase:S.phase,q:S.q?DB.Q[S.q]:'',n:S.answers.length+1,prog:t?Math.round(t.p*100):0,guess:S.guess,wrong:S.wrong,by:S.by,taught:S.taught||'',canUndo:S.answers.length>0,
+    hist:S.answers.slice(-12).map(([k,a])=>[DB.Q[k],a]),lastWrong:S.excluded[S.excluded.length-1]||''}}
+let V={phase:'start'},lastPh='start',lastN=0;SND.music('mystic');
+function sfxFor(v){if(v.phase!==lastPh){({guess:'reveal',won:'win',teach:'no',lost:'learn'})[v.phase]&&SND.play(({guess:'reveal',won:'win',teach:'no',lost:'learn'})[v.phase]);if(v.phase==='ask'&&lastPh==='guess')SND.play('no')}else if(v.phase==='ask'&&v.n!==lastN)SND.play('think');lastPh=v.phase;lastN=v.n;$('orb').className=v.phase==='guess'?'think':''}
+function render(){if(!MP.online||MP.isHost)V=view();sfxFor(V);const c=$('card');
+  const aName=a=>a==null?'Weiß nicht':a===1?'Ja':a===0?'Nein':a===.75?'Wahrscheinlich':'Eher nicht';
+  if(V.phase==='start'){c.innerHTML=`<p style="text-align:center;font-size:17px;line-height:1.5">Denk an eine berühmte Person, eine Film-, Spiel- oder Serienfigur.<br>Ich stelle dir Fragen – und lese deine Gedanken. 🔮</p><button class="btn pri" style="width:100%" id="go">Los geht's!</button><p class="small" style="text-align:center">Ich kenne ${DB.C.length} Figuren und ${Object.keys(DB.Q).length} Fragen – und lerne bei jedem Spiel dazu! 💾</p>`;$('go').onclick=()=>act({t:'new'})}
+  else if(V.phase==='ask'){c.innerHTML=`<div id="qnum">Frage ${V.n}</div><div class="bar"><i style="width:${Math.max(4,V.prog)}%"></i></div><div id="q">${esc(V.q)}</div><div class="ans">${ANS.map((a,i)=>`<button class="${a.c}" data-i="${i}">${a.t}</button>`).join('')}</div><div class="row"><button class="btn" id="undo" ${V.canUndo?'':'disabled'}>↶ Zurück</button><button class="btn" id="give">🏳️ Aufgeben</button></div>${V.hist.length?'<div class="hist">'+V.hist.map(h=>`<div>${esc(h[0])} → <b>${aName(h[1])}</b></div>`).reverse().join('')+'</div>':''}`;
+    c.querySelectorAll('.ans button').forEach(b=>b.onclick=()=>act({t:'ans',v:ANS[+b.dataset.i].v}));$('undo').onclick=()=>act({t:'undo'});$('give').onclick=()=>act({t:'giveup'})}
+  else if(V.phase==='guess'){c.innerHTML=`<div class="guess"><div class="small">Ich glaube, du denkst an …</div><div class="emo">${V.guess.e}</div><div class="name">${esc(V.guess.n)}</div><div class="row"><button class="btn pri" id="yes">✅ Richtig!</button><button class="btn" id="no">❌ Falsch</button></div></div>`;$('yes').onclick=()=>act({t:'right'});$('no').onclick=()=>act({t:'wrong'})}
+  else if(V.phase==='won'){c.innerHTML=`<div class="guess"><div class="emo">🎉</div><div class="name">Gedanken gelesen!</div><p>Es war <b>${esc(V.guess.n)}</b>. Ich habe mir deine Antworten gemerkt. 💾</p><button class="btn pri" style="width:100%" id="again">🔁 Nochmal spielen</button></div>`;$('again').onclick=()=>act({t:'new'})}
+  else if(V.phase==='teach'){c.innerHTML=`<div class="guess"><div class="emo">🤔</div><div class="name" style="font-size:22px">Du hast mich besiegt!</div></div><p class="small">Bring es mir bei – dann errate ich die Figur beim nächsten Mal (wird gespeichert und mit Mitspielern geteilt).</p>
+    <label>An wen hast du gedacht?</label><input id="tn" maxlength="40" placeholder="Name der Figur"><label>Emoji (optional)</label><input id="te" maxlength="4" placeholder="z.B. 🦄">
+    ${V.lastWrong?`<label>Eine Ja-Frage, die auf deine Figur zutrifft, aber nicht auf ${esc(V.lastWrong)} (optional)</label>`:'<label>Eine Ja-Frage, die typisch für deine Figur ist (optional)</label>'}<input id="tq" maxlength="140" placeholder="z.B. Hat deine Figur einen Zauberhut?">
+    <button class="btn pri" style="width:100%" id="tsave">💾 Merken</button>`;
+    $('tsave').onclick=()=>{const name=$('tn').value.trim();if(!name){$('tn').focus();return}act({t:'teach',d:{name,emoji:$('te').value.trim(),q:$('tq').value}})}}
+  else if(V.phase==='lost'){c.innerHTML=`<div class="guess"><div class="emo">🧠</div><div class="name" style="font-size:22px">Danke! Gelernt: ${esc(V.taught)}</div><p class="small">Beim nächsten Mal bin ich schlauer.</p><button class="btn pri" style="width:100%" id="again">🔁 Nochmal spielen</button></div>`;$('again').onclick=()=>act({t:'new'})}
+  $('who').textContent=MP.online&&V.by?'Letzte Antwort von: '+V.by:'';
+  $('stats').innerHTML=`🎮 ${stats.games} Spiele · 🏆 ${stats.wins} erraten · 🧠 ${Object.keys(learned.chars).length} gelernte/angepasste Figuren${MP.online?' · 🌍 Gemeinsam spielen aktiv':''}`}
+function act(a){if(MP.online&&!MP.isHost){MP.send({type:'act',a});return}apply(a,MP.online?MP.name():'')}
+/* ---- Multiplayer: Host steuert, alle antworten gemeinsam, Wissen wird geteilt ---- */
+function broadcastState(){if(MP.online&&MP.isHost)MP.send({type:'state',v:view(),db:DB.C.length})}
+function shareDB(){if(MP.online)MP.send({type:'db',learned})}
+function mergeDB(o){if(!o)return;let ch=false;for(const[k,v]of Object.entries(o.questions||{}))if(!learned.questions[k]){learned.questions[k]=v;ch=true}
+  for(const[n,c]of Object.entries(o.chars||{})){const m=learned.chars[n];if(!m){learned.chars[n]=c;ch=true}else{for(const[k,v]of Object.entries(c.v||{}))if(m.v[k]==null){m.v[k]=v;ch=true}}}
+  if(ch){saveDB();DB=buildDB();render()}}
+MP.mountPanel({prefix:'AKI',hint:'Gemeinsam raten: Alle sehen dieselbe Frage, jeder darf antworten. Gelernte Figuren werden zwischen allen Spielern geteilt und gespeichert.'});
+MP.on('msg',(m,from)=>{
+  if(m.type==='act'&&MP.isHost){if(!S&&m.a.t!=='new')return;apply(m.a,MP.roster[from]||'Mitspieler')}
+  else if(m.type==='state'&&!MP.isHost){V=m.v;render()}
+  else if(m.type==='db')mergeDB(m.learned);
+  else if(m.type==='_join'){shareDB();if(MP.isHost){if(!S){V={phase:'start'}}broadcastState()}}
+  else if(m.type==='_left'||m.type==='_leave')render();});
+render();
+</script></body></html>
