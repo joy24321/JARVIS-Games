@@ -9,3 +9,8 @@ Bestehende Spiel-Speicherfunktionen der anderen Dateien sind unverändert.
 Kein neuer echter synchronisierter Multiplayer für MonsterWorld implementiert.
 
 Zombie Game wurde entfernt: zombie.html auf GitHub bitte ebenfalls löschen.
+
+NEU: Waldinsel – Schlüssel & Seilbahn
+- Datei waldinsel.html ebenfalls ins Stammverzeichnis von JARVIS-Games hochladen.
+- Im Menü (index.html) als Karte „Waldinsel“ eingetragen.
+- Braucht Internet (lädt three.js von cdnjs). Kein Multiplayer, kein Spielstand-Speicher (nur Ton-Einstellungen).
